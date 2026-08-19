@@ -5,6 +5,7 @@
 #include "MolElementTable.h"
 #include "MolBondBuilder.h"
 #include "MolStructureAssembler.h"
+#include "MolSecondaryStructure.h"
 #include "MolTextUtils.h"
 #include "Async/ParallelFor.h"
 #include "Misc/FileHelper.h"
@@ -700,6 +701,8 @@ namespace MolecularForge
 		}
 
 		OutStructure.FinalizeAfterLoad();
+
+		ApplySecondaryStructurePolicy(OutStructure, Options, !SecondaryRanges.IsEmpty());
 
 		if (Options.bDeriveBonds)
 		{

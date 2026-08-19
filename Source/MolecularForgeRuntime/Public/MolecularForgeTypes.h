@@ -224,6 +224,22 @@ struct MOLECULARFORGERUNTIME_API FMolStructureMeta
 	FString Attribution;
 };
 
+/** Woher die Sekundaerstruktur kommen soll. */
+UENUM(BlueprintType)
+enum class EMolSecondaryStructureSource : uint8
+{
+	/** Nur uebernehmen, was in der Datei steht. Ohne Angabe bleibt alles Coil. */
+	FromFile		UMETA(DisplayName = "Nur aus der Datei"),
+	/** Angaben der Datei verwerfen und selbst rechnen. */
+	Compute			UMETA(DisplayName = "Immer berechnen"),
+	/**
+	 * Aus der Datei nehmen, und nur rechnen, wenn dort nichts steht.
+	 * Der sinnvolle Normalfall: experimentelle Strukturen bringen die vom Autor
+	 * hinterlegte Zuordnung mit, AlphaFold-Vorhersagen bringen keine.
+	 */
+	FromFileElseCompute	UMETA(DisplayName = "Datei, sonst berechnen")
+};
+
 /** Steuert, was beim Laden gemacht wird. */
 USTRUCT(BlueprintType)
 struct MOLECULARFORGERUNTIME_API FMolLoadOptions
@@ -249,6 +265,9 @@ struct MOLECULARFORGERUNTIME_API FMolLoadOptions
 	/** Struktur so verschieben, dass ihr Schwerpunkt im Ursprung liegt. */
 	UPROPERTY(EditAnywhere, BlueprintReadWrite, Category = "MolecularForge")
 	bool bCenterOnOrigin = true;
+
+	UPROPERTY(EditAnywhere, BlueprintReadWrite, Category = "MolecularForge")
+	EMolSecondaryStructureSource SecondaryStructureSource = EMolSecondaryStructureSource::FromFileElseCompute;
 
 	/**
 	 * Umrechnung Angstroem -> Unreal-Einheiten.

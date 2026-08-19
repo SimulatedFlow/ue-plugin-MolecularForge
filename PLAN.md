@@ -12,8 +12,9 @@ Kern in einem Satz: *PDB-/mmCIF-Datei oder UniProt-ID rein → performantes, ani
 
 *Letzte Aktualisierung: 2026-08-19.*
 
-**Phase 1 fertig. Phase 2 begonnen: mmCIF-Parser steht.** Beide Module bauen sauber gegen
-UE 5.8; **sieben** Automationstests laufen grün (`MolecularForge.*`).
+**Phase 1 fertig. Von Phase 2 fehlt nur noch die Cartoon-Mesh-Erzeugung** (und das
+Impostor-Material, das den Editor braucht). Alle drei Module bauen sauber gegen UE 5.8;
+**neunzehn** Automationstests laufen grün.
 
 Der schärfste davon ist `Parser.CifStimmtMitPdbUeberein`: derselbe Strukturausschnitt in
 beiden Formaten, und die Ergebnisse werden Atom für Atom verglichen. Wenn ein dritter Leser
@@ -31,13 +32,31 @@ Bauen und Testen ohne Editor-GUI:
 ```
 Vorher prüfen, ob `UnrealEditor.exe` läuft — der Testlauf sperrt sonst gegen die offene Sitzung.
 
-**Als Nächstes:** Sekundärstruktur-Berechnung (DSSP-artig über Wasserstoffbrücken-Energie),
-dann `MolecularForgeWeb` (AlphaFold-DB + RCSB), dann die Mesh-Erzeugung über Geometry
-Scripting. Alles ohne Editor machbar.
+**Als Nächstes:** `MolecularForgeWeb` (AlphaFold-DB + RCSB, lokaler Cache), danach die
+Mesh-Erzeugung über Geometry Scripting, danach Phase 3 und 4. Alles ohne Editor machbar.
 
-Warum die Berechnung nötig ist, obwohl beide Parser Sekundärstruktur lesen können:
-AlphaFold-Dateien enthalten keine. Ohne eigene Berechnung bliebe ausgerechnet die Quelle
-mit 200 Millionen Strukturen durchgehend als „Coil" eingefärbt.
+### Offene Punkte
+
+**Der Abruf selbst ist nicht testbar.** Die Tests decken Kennungsprüfung, Adressbildung und
+Zwischenspeicher ab — alles, was ohne Netz entscheidbar ist. Ein Test, der wirklich bei RCSB
+anfragt, prüft die Internetverbindung und nicht das Plugin: er wird rot, wenn EMBL-EBI wartet,
+und grün, wenn unser Code kaputt ist, aber der Cache noch etwas hergibt. Der echte Abruf muss
+einmal von Hand probiert werden, sobald der Editor zur Verfügung steht.
+
+**Testlücke Faltblatt-Erkennung.** Helix ist gegen eine ideal gebaute Geometrie geprüft
+(φ=−57°, ψ=−47° *ist* eine α-Helix — findet das Verfahren dort keine, liegt es am
+Verfahren). Für Faltblätter fehlt das Gegenstück: zwei korrekt zueinander liegende Stränge
+von Hand zu konstruieren ist fehleranfällig, und ein Fehlschlag wäre nicht zuordenbar —
+falsche Testgeometrie oder falsche Erkennung. Der Code ist geschrieben und folgt den
+Bridge-Definitionen der Arbeit, aber er ist nicht verifiziert. **Zu schließen, sobald eine
+echte Demo-Struktur mitgeliefert wird** (kommt für Fab ohnehin): dann gegen eine Struktur
+mit bekanntem Faltblattanteil prüfen.
+
+**Frage an Silvan — Copyright-Zeile.** Die Header stehen inzwischen auf
+`Copyright Simulated Flow`. Nach der bisherigen Aufteilung gehören Plugins zum Freelancer
+Silvan Teufel und nur Merch/Hardware zur UG. Ich habe nichts zurückgedreht. Wenn die
+Aufteilung weiter gilt, muss das vor dem Fab-Listing einheitlich sein — die Zeile steht
+in jeder Datei und im `.uplugin` unter `CreatedBy`.
 
 **Was auf den Editor wartet** (nicht ohne GUI zu erledigen, deshalb bewusst zurückgestellt):
 Impostor-Material, Beispiel-Level, Screenshots, Video, Fab-Paket.
@@ -123,10 +142,23 @@ Der Code ist getestet, das Bild nicht.
 - [x] Gemeinsamer Assembler für beide Formate + Formaterkennung (`ParseStructureFile`)
 - [x] Ketten-ID von `uint8` auf `FName` verbreitert — mmCIF erlaubt mehrstellige Bezeichner,
       und in Ribosomen sind `AA` und `AB` verschiedene Ketten
-- [ ] Sekundärstruktur: aus `HELIX`/`SHEET` bzw. `struct_conf` lesen ✅, sonst DSSP-artig
-      berechnen — **noch offen**, AlphaFold-Dateien liefern keine
-- [ ] Ball-and-Stick, Backbone-Tube, Cartoon/Ribbon über `UDynamicMesh` (Geometry Scripting)
-- [ ] `MolecularForgeWeb`: AlphaFold-DB (`/api/prediction/{uniprot}`) + RCSB-Abruf, lokaler Cache
+- [x] Sekundärstruktur: aus `HELIX`/`SHEET` bzw. `struct_conf` lesen, sonst nach
+      Kabsch/Sander (DSSP) berechnen — Amid-H geschätzt, H-Brücken-Energie über
+      Nachbarschaftsgitter parallel, Muster für Helix/Faltblatt/Turn. Prolin fällt als
+      Donor aus. Ladeoption `SecondaryStructureSource` steuert Datei/Rechnen/beides.
+      Die Faltblatt-Suche läuft über die gefundenen Brücken statt über alle Residuenpaare —
+      sonst wäre sie quadratisch und bei einem Ribosom unbrauchbar.
+- [x] Ball-and-Stick vollständig: `UMolecularBondsComponent` zeichnet Bindungen als
+      instanzierte Halbzylinder, jede Hälfte in der Farbe ihres eigenen Atoms
+- [x] Rückgrat-Spline (`MolBackboneSpline`): Catmull-Rom durch die Ankeratome, Querrichtung
+      aus der Carbonylgruppe statt aus einem festen Hochvektor, Umdrehkorrektur gegen das
+      Kippen im Faltblatt, Trennung an Lücken statt Interpolation über sie hinweg
+- [ ] Backbone-Tube und Cartoon/Ribbon: Profil entlang der Spline zu `FDynamicMesh3` ziehen
+      (Rundprofil für Coil, flaches Band für Helix, Pfeil für Faltblatt) — **als Nächstes**
+- [x] `MolecularForgeWeb`: AlphaFold-DB (`/api/prediction/{uniprot}`) + RCSB-Abruf, lokaler Cache.
+      Kennungsprüfung als Positivliste, zweistufiger AlphaFold-Abruf über die API, Download und
+      Parsen außerhalb des Spielthreads, Blueprint-Knoten „Struktur holen", Cache-Verwaltung.
+      *Der Abruf selbst ist nicht automatisiert testbar — siehe offene Punkte.*
 - [ ] Editor-Import-Factory: `.pdb`/`.cif` ins Content-Browser ziehen → Asset
 
 ### Phase 3 — Bewegung und Effekt

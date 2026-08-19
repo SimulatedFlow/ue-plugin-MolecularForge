@@ -24,6 +24,11 @@
 			"Name": "MolecularForgeRender",
 			"Type": "Runtime",
 			"LoadingPhase": "Default"
+		},
+		{
+			"Name": "MolecularForgeWeb",
+			"Type": "Runtime",
+			"LoadingPhase": "Default"
 		}
 	]
 }
