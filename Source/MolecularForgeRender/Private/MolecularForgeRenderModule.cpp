@@ -1,4 +1,4 @@
-// Copyright Silvan Teufel. All Rights Reserved.
+// Copyright Simulated Flow. All Rights Reserved.
 
 #include "Modules/ModuleManager.h"
 

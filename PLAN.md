@@ -3,7 +3,7 @@
 **Was das ist:** Ein Struktur-Loader und Renderer für Proteine und Moleküle in Unreal Engine 5.8.
 Kern in einem Satz: *PDB-/mmCIF-Datei oder UniProt-ID rein → performantes, animierbares, Niagara-fähiges Molekül in der Szene raus.*
 
-**Rechtsträger:** Freelancer Silvan Teufel (Plugins/Bücher-Schiene), nicht die Simulated Flow UG.
+**Rechtsträger:** Freelancer Simulated Flow (Plugins/Bücher-Schiene), nicht die Simulated Flow UG.
 **Ziel-Engine:** UE 5.8. **Zielplattform Verkauf:** Fab, sekundär Gumroad/Itch.
 
 ---
