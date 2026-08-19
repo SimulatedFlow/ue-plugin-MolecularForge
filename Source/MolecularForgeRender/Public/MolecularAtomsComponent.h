@@ -81,6 +81,21 @@ public:
 	UFUNCTION(BlueprintCallable, Category = "MolecularForge")
 	void RebuildInstances();
 
+	/**
+	 * Uebernimmt nur die Positionen aus der Struktur, ohne Filter, Farben und Radien neu
+	 * zu bestimmen.
+	 *
+	 * Fuer das Abspielen einer Trajektorie ist der Unterschied entscheidend: dort aendern
+	 * sich Bild fuer Bild ausschliesslich die Koordinaten, waehrend Elemente, Auswahl und
+	 * Faerbung gleich bleiben. Ein vollstaendiger Neuaufbau je Bild wuerde die immer
+	 * gleiche Arbeit dreissigmal pro Sekunde wiederholen.
+	 *
+	 * Stimmt die gespeicherte Zuordnung nicht mehr zur Instanzzahl — etwa nach dem Laden
+	 * einer Szene —, wird von selbst vollstaendig neu aufgebaut.
+	 */
+	UFUNCTION(BlueprintCallable, Category = "MolecularForge")
+	void RefreshTransformsFromStructure();
+
 	/** Zahl der zuletzt erzeugten Instanzen. Nach Filtern kleiner als die Atomzahl. */
 	UFUNCTION(BlueprintPure, Category = "MolecularForge")
 	int32 GetNumVisibleAtoms() const { return NumVisibleAtoms; }
@@ -101,4 +116,8 @@ private:
 
 	UPROPERTY(Transient)
 	int32 NumVisibleAtoms = 0;
+
+	/** Welches Atom hinter welcher Instanz steckt. Nur fuer das schnelle Aktualisieren. */
+	UPROPERTY(Transient)
+	TArray<int32> InstanceAtomIndices;
 };

@@ -9,6 +9,23 @@
 
 class UMolecularStructure;
 
+/** Woraus eine einzelne Stabinstanz entsteht. Nur fuer das schnelle Aktualisieren. */
+USTRUCT()
+struct FMolBondSegmentRef
+{
+	GENERATED_BODY()
+
+	UPROPERTY()
+	int32 FromAtom = 0;
+
+	UPROPERTY()
+	int32 ToAtom = 0;
+
+	/** 0 = ganze Bindung, 1 = erste Haelfte, 2 = zweite Haelfte. */
+	UPROPERTY()
+	uint8 Half = 0;
+};
+
 /**
  * Stellt die kovalenten Bindungen als Staebe dar — die zweite Haelfte von Ball-and-Stick.
  *
@@ -67,6 +84,14 @@ public:
 	UFUNCTION(BlueprintCallable, Category = "MolecularForge")
 	void RebuildInstances();
 
+	/**
+	 * Uebernimmt nur die Positionen aus der Struktur. Siehe die gleichnamige Funktion
+	 * an der Kugelkomponente — beim Abspielen einer Trajektorie aendert sich nur die
+	 * Geometrie, waehrend Auswahl und Faerbung stehen bleiben.
+	 */
+	UFUNCTION(BlueprintCallable, Category = "MolecularForge")
+	void RefreshTransformsFromStructure();
+
 	UFUNCTION(BlueprintPure, Category = "MolecularForge")
 	int32 GetNumVisibleBonds() const { return NumVisibleBonds; }
 
@@ -82,4 +107,7 @@ private:
 
 	UPROPERTY(Transient)
 	int32 NumVisibleBonds = 0;
+
+	UPROPERTY(Transient)
+	TArray<FMolBondSegmentRef> InstanceSegments;
 };

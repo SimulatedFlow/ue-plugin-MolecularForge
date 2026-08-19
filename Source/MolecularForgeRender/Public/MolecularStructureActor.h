@@ -8,6 +8,9 @@
 #include "MolecularStructureActor.generated.h"
 
 class UMolecularAtomsComponent;
+class UMolecularBondsComponent;
+class UMolecularCartoonComponent;
+class UMolecularSurfaceComponent;
 class UMolecularStructure;
 
 /**
@@ -39,6 +42,20 @@ public:
 	UPROPERTY(EditAnywhere, BlueprintReadWrite, Category = "MolecularForge")
 	bool bLoadOnBeginPlay = true;
 
+	/**
+	 * Darstellungsart. Schaltet die drei Komponenten passend zu- und ab, statt sie
+	 * einzeln bedienen zu muessen.
+	 */
+	UPROPERTY(EditAnywhere, BlueprintReadWrite, Category = "MolecularForge")
+	EMolRepresentation Representation = EMolRepresentation::Cartoon;
+
+	UPROPERTY(EditAnywhere, BlueprintReadWrite, Category = "MolecularForge")
+	EMolColorScheme ColorScheme = EMolColorScheme::SecondaryStructure;
+
+	/** Uebertraegt Darstellungsart und Faerbung auf die Komponenten und baut sie neu auf. */
+	UFUNCTION(BlueprintCallable, CallInEditor, Category = "MolecularForge")
+	void ApplyRepresentation();
+
 	/** Laedt die Datei aus StructureFilePath und uebergibt sie an die Darstellungskomponente. */
 	UFUNCTION(BlueprintCallable, CallInEditor, Category = "MolecularForge")
 	void LoadNow();
@@ -50,11 +67,33 @@ public:
 	UFUNCTION(BlueprintPure, Category = "MolecularForge")
 	UMolecularAtomsComponent* GetAtomsComponent() const { return AtomsComponent; }
 
+	UFUNCTION(BlueprintPure, Category = "MolecularForge")
+	UMolecularBondsComponent* GetBondsComponent() const { return BondsComponent; }
+
+	UFUNCTION(BlueprintPure, Category = "MolecularForge")
+	UMolecularCartoonComponent* GetCartoonComponent() const { return CartoonComponent; }
+
+	UFUNCTION(BlueprintPure, Category = "MolecularForge")
+	UMolecularSurfaceComponent* GetSurfaceComponent() const { return SurfaceComponent; }
+
 protected:
 	virtual void BeginPlay() override;
 
+#if WITH_EDITOR
+	virtual void PostEditChangeProperty(FPropertyChangedEvent& PropertyChangedEvent) override;
+#endif
+
 	UPROPERTY(VisibleAnywhere, BlueprintReadOnly, Category = "MolecularForge")
 	TObjectPtr<UMolecularAtomsComponent> AtomsComponent;
+
+	UPROPERTY(VisibleAnywhere, BlueprintReadOnly, Category = "MolecularForge")
+	TObjectPtr<UMolecularBondsComponent> BondsComponent;
+
+	UPROPERTY(VisibleAnywhere, BlueprintReadOnly, Category = "MolecularForge")
+	TObjectPtr<UMolecularCartoonComponent> CartoonComponent;
+
+	UPROPERTY(VisibleAnywhere, BlueprintReadOnly, Category = "MolecularForge")
+	TObjectPtr<UMolecularSurfaceComponent> SurfaceComponent;
 
 	UPROPERTY(Transient, BlueprintReadOnly, Category = "MolecularForge")
 	TObjectPtr<UMolecularStructure> LoadedStructure;

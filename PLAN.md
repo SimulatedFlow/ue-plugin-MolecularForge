@@ -12,9 +12,12 @@ Kern in einem Satz: *PDB-/mmCIF-Datei oder UniProt-ID rein → performantes, ani
 
 *Letzte Aktualisierung: 2026-08-19.*
 
-**Phase 1 fertig. Von Phase 2 fehlt nur noch die Cartoon-Mesh-Erzeugung** (und das
-Impostor-Material, das den Editor braucht). Alle drei Module bauen sauber gegen UE 5.8;
-**neunzehn** Automationstests laufen grün.
+**Phase 1 und 2 sind fertig** (bis auf das Impostor-Material, das den Editor braucht),
+**von Phase 3 stehen Oberfläche und Niagara-Anbindung.** Alle vier Module bauen sauber
+gegen UE 5.8; **zweiunddreißig** Automationstests laufen grün.
+
+Damit gibt es fünf Darstellungen: Space-Filling, Ball-and-Stick, Rückgrat, Cartoon und
+Oberfläche, alle über `AMolecularStructureActor` umschaltbar.
 
 Der schärfste davon ist `Parser.CifStimmtMitPdbUeberein`: derselbe Strukturausschnitt in
 beiden Formaten, und die Ergebnisse werden Atom für Atom verglichen. Wenn ein dritter Leser
@@ -32,10 +35,22 @@ Bauen und Testen ohne Editor-GUI:
 ```
 Vorher prüfen, ob `UnrealEditor.exe` läuft — der Testlauf sperrt sonst gegen die offene Sitzung.
 
-**Als Nächstes:** `MolecularForgeWeb` (AlphaFold-DB + RCSB, lokaler Cache), danach die
-Mesh-Erzeugung über Geometry Scripting, danach Phase 3 und 4. Alles ohne Editor machbar.
+**Als Nächstes:** Rest von Phase 3 — MD-Trajektorien (XTC/DCD abspielen), dann Mess- und
+Selektionswerkzeuge. Danach Phase 4 (Mass). Alles ohne Editor machbar.
 
 ### Offene Punkte
+
+**Entscheidung Niagara: Array-Parameter statt eigenem Data Interface.** Ein eigenes
+Interface könnte ohne Umkopieren direkt auf die Strukturdaten zugreifen und wäre bei
+ständig wechselnden Daten im Vorteil — etwa während einer MD-Trajektorie. Es braucht dafür
+aber eigenen HLSL-Code für den GPU-Pfad, und der lässt sich nicht headless prüfen: ein
+Fehler darin fällt erst im laufenden Effekt auf, und im Zweifel erst beim Kunden.
+Array-Parameter kosten ein einmaliges Umkopieren beim Setzen, laufen auf CPU- und
+GPU-Simulationen unverändert und sind vollständig testbar. Bei einer statischen Struktur
+wird ohnehin einmal gesetzt und danach nur gelesen. **Nachzuholen, wenn die
+MD-Trajektorien stehen** — dort wird pro Bild neu gesetzt, und erst dann zahlt sich das
+eigene Interface aus. Silvan sollte wissen, dass „Custom Niagara DI" damit vorerst *nicht*
+im Fab-Listing behauptet werden darf.
 
 **Der Abruf selbst ist nicht testbar.** Die Tests decken Kennungsprüfung, Adressbildung und
 Zwischenspeicher ab — alles, was ohne Netz entscheidbar ist. Ein Test, der wirklich bei RCSB
@@ -82,7 +97,7 @@ Impostor-Material, Beispiel-Level, Screenshots, Video, Fab-Paket.
 | `MolecularForgeRender` | Runtime | Impostor-Spheres, Ball-and-Stick, Backbone-Tube/Ribbon, Solvent-Surface, Färbeschemata |
 | `MolecularForgeWeb` | Runtime | AlphaFold-DB- und RCSB-Abruf, lokaler Cache |
 | `MolecularForgeMass` | Runtime | **Mesoskopische Ebene**: viele Molekül-Instanzen als Mass-Entities (Diffusion, LOD, Repräsentation) |
-| `MolecularForgeNiagara` | Runtime | Niagara Data Interface: Atompositionen/Elemente/Ketten als Partikelquelle |
+| `MolecularForgeNiagara` | Runtime | Atompositionen/Farben/Radien/Bindungen als Niagara-Array-Parameter |
 | `MolecularForgeEditor` | Editor | Import-Factory (`.pdb`/`.cif` per Drag&Drop), Asset-Typ, Thumbnail, „Struktur holen"-Dialog |
 
 ---
@@ -153,8 +168,13 @@ Der Code ist getestet, das Bild nicht.
 - [x] Rückgrat-Spline (`MolBackboneSpline`): Catmull-Rom durch die Ankeratome, Querrichtung
       aus der Carbonylgruppe statt aus einem festen Hochvektor, Umdrehkorrektur gegen das
       Kippen im Faltblatt, Trennung an Lücken statt Interpolation über sie hinweg
-- [ ] Backbone-Tube und Cartoon/Ribbon: Profil entlang der Spline zu `FDynamicMesh3` ziehen
-      (Rundprofil für Coil, flaches Band für Helix, Pfeil für Faltblatt) — **als Nächstes**
+- [x] Cartoon/Ribbon: `MolRibbonBuilder` zieht ein Superellipsen-Profil entlang der Spline —
+      rund für Schleifen, flach für Helices, flach mit Pfeilspitze für Faltblätter.
+      Profilmaße werden über die Sekundärstruktur-Grenzen geglättet, die Pfeilspitze erst
+      danach aufgesetzt und bleibt deshalb scharf. Ausgabe als neutrale Arrays
+      (`FMolMeshData`), getragen von `UMolecularCartoonComponent` (ProceduralMeshComponent).
+- [x] `AMolecularStructureActor` schaltet Kugeln, Stäbe und Band über eine
+      Darstellungsart um, statt drei Komponenten einzeln bedienen zu lassen
 - [x] `MolecularForgeWeb`: AlphaFold-DB (`/api/prediction/{uniprot}`) + RCSB-Abruf, lokaler Cache.
       Kennungsprüfung als Positivliste, zweistufiger AlphaFold-Abruf über die API, Download und
       Parsen außerhalb des Spielthreads, Blueprint-Knoten „Struktur holen", Cache-Verwaltung.
@@ -162,8 +182,21 @@ Der Code ist getestet, das Bild nicht.
 - [ ] Editor-Import-Factory: `.pdb`/`.cif` ins Content-Browser ziehen → Asset
 
 ### Phase 3 — Bewegung und Effekt
-- [ ] Solvent-Surface: Gauß-Dichtegitter + Marching Cubes, GPU wo möglich
-- [ ] Niagara Data Interface (Atompositionen/Elemente als Partikelquelle) — Auflösen, Falten, Docking-VFX
+- [x] Moleküloberfläche: Gauß-Dichtegitter + Isoflächen-Extraktion, `UMolecularSurfaceComponent`.
+      **Marching Tetraeder statt Marching Cubes** — die Würfelvariante braucht eine Tabelle mit
+      256 Fällen, und eine falsche Zeile darin erzeugt Löcher, die erst im fertigen Bild
+      auffallen. Die Tetraedervariante kommt ohne Tabelle aus und ist per Konstruktion dicht;
+      der Preis sind etwa doppelt so viele Dreiecke. Falls das je stört, ist der Austausch
+      lokal auf eine Funktion begrenzt.
+      *Es ist ausdrücklich eine Gauß-Oberfläche, nicht die solvent-excluded surface nach
+      Connolly — für Anschauung nicht zu unterscheiden, zum Ausmessen ungeeignet.*
+- [x] Niagara-Anbindung: `MolecularForgeNiagara` übergibt Atompositionen, Farben, Radien und
+      optional Bindungen als Array-Parameter — Auflösen, Falten, Docking-VFX.
+      Filter und Färbung entsprechen exakt der Kugeldarstellung, damit Mesh und Partikel
+      dasselbe Molekül gleich zeigen. Ausdünnen auf eine Obergrenze verteilt gleichmäßig
+      über die Struktur statt vorne abzuschneiden.
+      **Bewusst über Array-Parameter statt über ein eigenes Data Interface** — Begründung
+      unter „Offene Punkte".
 - [ ] MD-Trajektorien (XTC/DCD) als Positionsanimation abspielen
 - [ ] Messwerkzeuge (Abstand/Winkel), Selektionssprache (`chain A and resi 1-50`)
 

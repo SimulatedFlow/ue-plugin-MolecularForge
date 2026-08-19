@@ -13,6 +13,7 @@ namespace
 		bool bHasCarbonyl = false;
 		EMolSecondaryStructure SecondaryStructure = EMolSecondaryStructure::Coil;
 		int32 ResidueIndex = INDEX_NONE;
+		int32 AnchorAtomIndex = INDEX_NONE;
 	};
 
 	FVector3f CatmullRom(const FVector3f& P0, const FVector3f& P1,
@@ -99,6 +100,7 @@ namespace
 			Guide.Position = Structure.AtomPositions[AnchorAtom];
 			Guide.SecondaryStructure = Residue.SecondaryStructure;
 			Guide.ResidueIndex = r;
+			Guide.AnchorAtomIndex = AnchorAtom;
 
 			if (CarbonylC != INDEX_NONE && CarbonylO != INDEX_NONE)
 			{
@@ -231,6 +233,7 @@ namespace
 				const FMolGuidePoint& Nearest = (T < 0.5f) ? G1 : G2;
 				Point.SecondaryStructure = Nearest.SecondaryStructure;
 				Point.ResidueIndex = Nearest.ResidueIndex;
+				Point.AnchorAtomIndex = Nearest.AnchorAtomIndex;
 
 				Point.Alpha = (TotalSpans > 0.f)
 					? (static_cast<float>(Span) + T) / TotalSpans

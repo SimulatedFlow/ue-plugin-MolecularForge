@@ -2,9 +2,9 @@
 
 using UnrealBuildTool;
 
-public class MolecularForgeRender : ModuleRules
+public class MolecularForgeNiagara : ModuleRules
 {
-	public MolecularForgeRender(ReadOnlyTargetRules Target) : base(Target)
+	public MolecularForgeNiagara(ReadOnlyTargetRules Target) : base(Target)
 	{
 		PCHUsage = PCHUsageMode.UseExplicitOrSharedPCHs;
 		CppStandard = CppStandardVersion.Cpp20;
@@ -15,15 +15,12 @@ public class MolecularForgeRender : ModuleRules
 			"CoreUObject",
 			"Engine",
 			"MolecularForgeRuntime",
-			// Traegt das Cartoon-Band. Anders als Atome und Bindungen laesst es sich
-			// nicht instanzieren — es ist eine einzige durchgehende Flaeche.
-			"ProceduralMeshComponent"
+			"Niagara"
 		});
 
 		PrivateDependencyModuleNames.AddRange(new string[]
 		{
-			"RenderCore",
-			"RHI",
+			"NiagaraCore",
 			"Projects"
 		});
 	}

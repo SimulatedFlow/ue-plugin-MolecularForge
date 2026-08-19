@@ -65,6 +65,7 @@ void UMolecularBondsComponent::RebuildInstances()
 {
 	ClearInstances();
 	NumVisibleBonds = 0;
+	InstanceSegments.Reset();
 
 	if (!Structure || Structure->GetNumBonds() == 0)
 	{
@@ -82,7 +83,8 @@ void UMolecularBondsComponent::RebuildInstances()
 	// Setzt einen Zylinder so, dass er von Start nach Ende reicht. Der Engine-Zylinder
 	// steht auf der Z-Achse und ist um seinen Mittelpunkt zentriert, also wird er auf die
 	// Mitte der Strecke gesetzt, entlang Z gestreckt und auf die Richtung gedreht.
-	auto AddSegment = [&](const FVector& Start, const FVector& End, const FLinearColor& Color)
+	auto AddSegment = [&](const FVector& Start, const FVector& End, const FLinearColor& Color,
+		int32 FromAtom, int32 ToAtom, uint8 Half)
 	{
 		const FVector Delta = End - Start;
 		const double Length = Delta.Size();
@@ -96,6 +98,7 @@ void UMolecularBondsComponent::RebuildInstances()
 
 		Transforms.Emplace(Rotation, Start + Delta * 0.5, Scale);
 		Colors.Add(Color);
+		InstanceSegments.Add(FMolBondSegmentRef{ FromAtom, ToAtom, Half });
 	};
 
 	for (const FMolBond& Bond : Structure->Bonds)
@@ -118,12 +121,15 @@ void UMolecularBondsComponent::RebuildInstances()
 		if (bSplitByAtomColor)
 		{
 			const FVector Middle = (A + B) * 0.5;
-			AddSegment(A, Middle, Structure->GetAtomColor(Bond.AtomA, ColorScheme, UniformColor));
-			AddSegment(Middle, B, Structure->GetAtomColor(Bond.AtomB, ColorScheme, UniformColor));
+			AddSegment(A, Middle, Structure->GetAtomColor(Bond.AtomA, ColorScheme, UniformColor),
+				Bond.AtomA, Bond.AtomB, 1);
+			AddSegment(Middle, B, Structure->GetAtomColor(Bond.AtomB, ColorScheme, UniformColor),
+				Bond.AtomA, Bond.AtomB, 2);
 		}
 		else
 		{
-			AddSegment(A, B, Structure->GetAtomColor(Bond.AtomA, ColorScheme, UniformColor));
+			AddSegment(A, B, Structure->GetAtomColor(Bond.AtomA, ColorScheme, UniformColor),
+				Bond.AtomA, Bond.AtomB, 0);
 		}
 
 		++NumVisibleBonds;
@@ -150,6 +156,63 @@ void UMolecularBondsComponent::RebuildInstances()
 
 	UE_LOG(LogMolecularForge, Verbose, TEXT("Bindungen aufgebaut: %d sichtbar, %d Instanzen."),
 		NumVisibleBonds, Transforms.Num());
+}
+
+void UMolecularBondsComponent::RefreshTransformsFromStructure()
+{
+	if (!Structure || Structure->IsEmpty())
+	{
+		return;
+	}
+
+	if (InstanceSegments.Num() != GetInstanceCount())
+	{
+		RebuildInstances();
+		return;
+	}
+
+	const float RadiusScale = (BondRadiusAngstrom * UnitsPerAngstrom) / GEngineCylinderRadius;
+
+	TArray<FTransform> Transforms;
+	Transforms.SetNumUninitialized(InstanceSegments.Num());
+
+	for (int32 Instance = 0; Instance < InstanceSegments.Num(); ++Instance)
+	{
+		const FMolBondSegmentRef& Segment = InstanceSegments[Instance];
+
+		if (!Structure->AtomPositions.IsValidIndex(Segment.FromAtom)
+			|| !Structure->AtomPositions.IsValidIndex(Segment.ToAtom))
+		{
+			RebuildInstances();
+			return;
+		}
+
+		const FVector A = FVector(Structure->AtomPositions[Segment.FromAtom]) * UnitsPerAngstrom;
+		const FVector B = FVector(Structure->AtomPositions[Segment.ToAtom]) * UnitsPerAngstrom;
+		const FVector Middle = (A + B) * 0.5;
+
+		const FVector Start = (Segment.Half == 2) ? Middle : A;
+		const FVector End = (Segment.Half == 1) ? Middle : B;
+
+		const FVector Delta = End - Start;
+		const double Length = Delta.Size();
+
+		if (Length <= UE_SMALL_NUMBER)
+		{
+			// Zwei Atome sind aufeinandergefallen. Der Stab wird auf null gestaucht,
+			// damit er nicht als Artefakt stehen bleibt.
+			Transforms[Instance] = FTransform(FQuat::Identity, Start, FVector::ZeroVector);
+			continue;
+		}
+
+		Transforms[Instance] = FTransform(
+			FRotationMatrix::MakeFromZ(Delta / Length).ToQuat(),
+			Start + Delta * 0.5,
+			FVector(RadiusScale, RadiusScale, Length / GEngineCylinderHeight));
+	}
+
+	BatchUpdateInstancesTransforms(0, Transforms,
+		/*bWorldSpace=*/false, /*bMarkRenderStateDirty=*/true, /*bTeleport=*/true);
 }
 
 #if WITH_EDITOR

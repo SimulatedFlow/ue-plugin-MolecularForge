@@ -51,7 +51,18 @@ enum class EMolRepresentation : uint8
 	/** Nur das Polymer-Rueckgrat. Fuer grosse Komplexe, bei denen alles andere zumacht. */
 	Backbone		UMETA(DisplayName = "Rueckgrat"),
 	/** Nur die Ankeratome (CA bzw. C1'). Die guenstigste Uebersichtsdarstellung. */
-	AlphaTrace		UMETA(DisplayName = "CA-Spur")
+	AlphaTrace		UMETA(DisplayName = "CA-Spur"),
+	/**
+	 * Cartoon-Band: Helices als flaches Band, Faltblaetter mit Pfeilspitze, Schleifen rund.
+	 * Von den Atomen bleiben nur die Heterogruppen sichtbar — der Ligand ist meistens
+	 * genau das, was man neben dem Faltungsverlauf sehen will.
+	 */
+	Cartoon			UMETA(DisplayName = "Cartoon"),
+	/**
+	 * Geschlossene Molekueloberflaeche. Zeigt Silhouette und Taschen — also das, was
+	 * ein Bindungspartner von aussen ueberhaupt zu sehen bekommt.
+	 */
+	Surface			UMETA(DisplayName = "Oberflaeche")
 };
 
 /** Faerbeschema fuer die Darstellung. */

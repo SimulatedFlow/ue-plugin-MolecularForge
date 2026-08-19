@@ -2,99 +2,25 @@
 
 #include "Misc/AutomationTest.h"
 #include "MolBackboneSpline.h"
+#include "MolTestChainBuilder.h"
 #include "MolecularStructure.h"
 
 #if WITH_DEV_AUTOMATION_TESTS
 
 namespace
 {
-	/** Abstand zweier aufeinanderfolgender CA-Atome in einer Polypeptidkette. */
-	constexpr float GCaSpacing = 3.8f;
+	constexpr float GCaSpacing = MolTest::CaSpacing;
 
-	/**
-	 * Baut eine Minimalstruktur aus vorgegebenen Ankerpositionen und Carbonylrichtungen.
-	 *
-	 * Absichtlich keine vollstaendige Peptidgeometrie: geprueft werden soll die Spline und
-	 * nicht der Kettenbau. Je Residuum reichen die drei Atome, die das Verfahren anfasst —
-	 * CA als Anker sowie C und O fuer die Querrichtung.
-	 */
 	UMolecularStructure* BuildTestChain(
 		const TArray<FVector3f>& AnchorPositions,
 		const TArray<FVector3f>& CarbonylDirections)
 	{
-		UMolecularStructure* Structure = NewObject<UMolecularStructure>();
-
-		const int32 NumResidues = AnchorPositions.Num();
-		const int32 NumAtoms = NumResidues * 3;
-		Structure->PreallocateAtoms(NumAtoms);
-
-		FMolChain& Chain = Structure->Chains.AddDefaulted_GetRef();
-		Chain.Id = FName("A");
-		Chain.FirstResidue = 0;
-		Chain.NumResidues = NumResidues;
-		Chain.FirstAtom = 0;
-		Chain.NumAtoms = NumAtoms;
-
-		static const FName NameCA(TEXT("CA"));
-		static const FName NameC(TEXT("C"));
-		static const FName NameO(TEXT("O"));
-
-		int32 AtomIndex = 0;
-		for (int32 i = 0; i < NumResidues; ++i)
-		{
-			FMolResidue& Residue = Structure->Residues.AddDefaulted_GetRef();
-			Residue.Name = FName("ALA");
-			Residue.SequenceNumber = i + 1;
-			Residue.ChainIndex = 0;
-			Residue.FirstAtom = AtomIndex;
-			Residue.NumAtoms = 3;
-
-			const FVector3f Anchor = AnchorPositions[i];
-			const FVector3f Carbonyl = CarbonylDirections.IsValidIndex(i)
-				? CarbonylDirections[i].GetSafeNormal()
-				: FVector3f::ZAxisVector;
-
-			// CA (Anker), dann C etwas weiter, dann O in der vorgegebenen Richtung.
-			const FVector3f CarbonPos = Anchor + FVector3f(0.f, 0.5f, 0.f);
-			const FVector3f OxygenPos = CarbonPos + Carbonyl * 1.23f;
-
-			const FVector3f Positions[3] = { Anchor, CarbonPos, OxygenPos };
-			const FName Names[3] = { NameCA, NameC, NameO };
-			const uint8 Elements[3] = { 6, 6, 8 };
-			const uint8 Flags[3] =
-			{
-				MolAtom_Backbone | MolAtom_Anchor,
-				MolAtom_Backbone,
-				MolAtom_Backbone
-			};
-
-			for (int32 k = 0; k < 3; ++k)
-			{
-				Structure->AtomPositions[AtomIndex] = Positions[k];
-				Structure->AtomNames[AtomIndex] = Names[k];
-				Structure->AtomElements[AtomIndex] = Elements[k];
-				Structure->AtomResidueIndices[AtomIndex] = i;
-				Structure->AtomBFactors[AtomIndex] = 0.f;
-				Structure->AtomOccupancies[AtomIndex] = 1.f;
-				Structure->AtomFlags[AtomIndex] = Flags[k];
-				++AtomIndex;
-			}
-		}
-
-		Structure->FinalizeAfterLoad();
-		return Structure;
+		return MolTest::BuildChain(AnchorPositions, CarbonylDirections);
 	}
 
-	/** Gerade Kette entlang X mit typischem CA-Abstand. */
 	TArray<FVector3f> MakeStraightAnchors(int32 Count)
 	{
-		TArray<FVector3f> Anchors;
-		Anchors.Reserve(Count);
-		for (int32 i = 0; i < Count; ++i)
-		{
-			Anchors.Add(FVector3f(i * GCaSpacing, 0.f, 0.f));
-		}
-		return Anchors;
+		return MolTest::MakeStraightAnchors(Count);
 	}
 }
 

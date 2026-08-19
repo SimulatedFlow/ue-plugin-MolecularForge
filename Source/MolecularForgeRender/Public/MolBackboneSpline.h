@@ -31,6 +31,14 @@ struct FMolBackbonePoint
 	/** Index in UMolecularStructure::Residues. */
 	int32 ResidueIndex = INDEX_NONE;
 
+	/**
+	 * Ankeratom des naechstgelegenen Residuums (CA bzw. C1').
+	 * Wird zum Einfaerben gebraucht: die Faerbeschemata arbeiten auf Atomen, ein
+	 * Bandpunkt braucht aber eine Farbe. Ueber den Anker bekommt er dieselbe wie
+	 * die Kugeldarstellung, sodass beide Darstellungen zusammenpassen.
+	 */
+	int32 AnchorAtomIndex = INDEX_NONE;
+
 	/** Fortschritt entlang dieses Abschnitts, 0 bis 1. */
 	float Alpha = 0.f;
 };

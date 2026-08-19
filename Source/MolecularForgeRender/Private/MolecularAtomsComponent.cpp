@@ -61,6 +61,7 @@ float UMolecularAtomsComponent::GetRepresentationRadiusFactor() const
 		return 0.25f;
 	case EMolRepresentation::Backbone:
 	case EMolRepresentation::AlphaTrace:
+	case EMolRepresentation::Cartoon:
 		return 0.35f;
 	default:
 		return 1.f;
@@ -90,6 +91,16 @@ bool UMolecularAtomsComponent::ShouldDrawAtom(int32 AtomIndex) const
 	case EMolRepresentation::AlphaTrace:
 		return (Flags & MolAtom_Anchor) != 0 || (Flags & MolAtom_Hetatm) != 0;
 
+	case EMolRepresentation::Cartoon:
+		// Das Band zeichnet das Polymer; die Kugeln steuern nur noch bei, was das
+		// Band nicht zeigen kann — Liganden, Kofaktoren, Metallzentren.
+		return (Flags & MolAtom_Hetatm) != 0;
+
+	case EMolRepresentation::Surface:
+		// Die Huelle umschliesst ohnehin alles; Kugeln darin waeren unsichtbar
+		// und wuerden nur Instanzen kosten.
+		return false;
+
 	default:
 		return true;
 	}
@@ -99,6 +110,7 @@ void UMolecularAtomsComponent::RebuildInstances()
 {
 	ClearInstances();
 	NumVisibleAtoms = 0;
+	InstanceAtomIndices.Reset();
 
 	if (!Structure || Structure->IsEmpty())
 	{
@@ -119,6 +131,7 @@ void UMolecularAtomsComponent::RebuildInstances()
 	Transforms.Reserve(NumAtoms);
 	Colors.Reserve(NumAtoms);
 	Radii.Reserve(NumAtoms);
+	InstanceAtomIndices.Reserve(NumAtoms);
 
 	for (int32 i = 0; i < NumAtoms; ++i)
 	{
@@ -137,6 +150,7 @@ void UMolecularAtomsComponent::RebuildInstances()
 
 		Colors.Add(Structure->GetAtomColor(i, ColorScheme, UniformColor));
 		Radii.Add(RadiusAngstrom);
+		InstanceAtomIndices.Add(i);
 	}
 
 	NumVisibleAtoms = Transforms.Num();
@@ -163,6 +177,49 @@ void UMolecularAtomsComponent::RebuildInstances()
 
 	UE_LOG(LogMolecularForge, Verbose, TEXT("Instanzen aufgebaut: %d von %d Atomen sichtbar."),
 		NumVisibleAtoms, NumAtoms);
+}
+
+void UMolecularAtomsComponent::RefreshTransformsFromStructure()
+{
+	if (!Structure || Structure->IsEmpty())
+	{
+		return;
+	}
+
+	// Zuordnung passt nicht mehr — dann lieber einmal richtig aufbauen, als anhand
+	// veralteter Indizes in die Atomliste zu greifen.
+	if (InstanceAtomIndices.Num() != GetInstanceCount())
+	{
+		RebuildInstances();
+		return;
+	}
+
+	const float RadiusFactor = GetRepresentationRadiusFactor() * RadiusScale;
+
+	TArray<FTransform> Transforms;
+	Transforms.SetNumUninitialized(InstanceAtomIndices.Num());
+
+	for (int32 Instance = 0; Instance < InstanceAtomIndices.Num(); ++Instance)
+	{
+		const int32 AtomIndex = InstanceAtomIndices[Instance];
+		if (!Structure->AtomPositions.IsValidIndex(AtomIndex))
+		{
+			// Die Struktur hat sich unter uns geaendert.
+			RebuildInstances();
+			return;
+		}
+
+		const float RadiusAngstrom = Structure->GetAtomVdWRadius(AtomIndex) * RadiusFactor;
+		const float ScaleFactor = (RadiusAngstrom * UnitsPerAngstrom) / GEngineSphereRadius;
+
+		Transforms[Instance] = FTransform(
+			FQuat::Identity,
+			FVector(Structure->AtomPositions[AtomIndex]) * UnitsPerAngstrom,
+			FVector(ScaleFactor));
+	}
+
+	BatchUpdateInstancesTransforms(0, Transforms,
+		/*bWorldSpace=*/false, /*bMarkRenderStateDirty=*/true, /*bTeleport=*/true);
 }
 
 #if WITH_EDITOR
