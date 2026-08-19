@@ -34,6 +34,11 @@
 			"Name": "MolecularForgeNiagara",
 			"Type": "Runtime",
 			"LoadingPhase": "Default"
+		},
+		{
+			"Name": "MolecularForgeMass",
+			"Type": "Runtime",
+			"LoadingPhase": "Default"
 		}
 	],
 	"Plugins": [
@@ -43,6 +48,10 @@
 		},
 		{
 			"Name": "Niagara",
+			"Enabled": true
+		},
+		{
+			"Name": "MassGameplay",
 			"Enabled": true
 		}
 	]

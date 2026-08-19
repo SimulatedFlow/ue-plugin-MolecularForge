@@ -3,137 +3,26 @@
 #include "Misc/AutomationTest.h"
 #include "MolecularStructure.h"
 #include "MolSecondaryStructure.h"
+#include "MolTestPeptideBuilder.h"
 
 #if WITH_DEV_AUTOMATION_TESTS
 
 namespace
 {
-	// Standardgeometrie des Proteinrueckgrats (Engh & Huber). Bindungslaengen in Angstroem,
-	// Winkel in Grad. Diese Zahlen sind Lehrbuchwerte und stehen hier bewusst als Konstanten,
-	// damit im Test sichtbar bleibt, woher die Testgeometrie kommt.
-	constexpr float GBondNCA = 1.458f;
-	constexpr float GBondCAC = 1.525f;
-	constexpr float GBondCN  = 1.329f;
-	constexpr float GBondCO  = 1.231f;
+	// Der ideale Peptidbau steht in MolTestPeptideBuilder.h, seit ihn mehrere Testdateien
+	// brauchen: hier fuer die Sekundaerstruktur, daneben fuer das Zurueckmessen der
+	// Torsionswinkel. Zweimal dieselbe Geometrie zu pflegen waere die sicherste Art,
+	// sie irgendwann auseinanderlaufen zu lassen.
+	using MolTestPeptide::BuildIdealPeptide;
 
-	constexpr float GAngleNCAC = 111.2f;
-	constexpr float GAngleCACN = 116.2f;
-	constexpr float GAngleCNCA = 121.7f;
-	constexpr float GAngleCACO = 120.8f;
+	constexpr float GBondNCA = MolTestPeptide::BondNCA;
+	constexpr float GBondCAC = MolTestPeptide::BondCAC;
+	constexpr float GBondCN = MolTestPeptide::BondCN;
 
-	/** Torsionswinkel einer idealen Alpha-Helix. */
-	constexpr float GHelixPhi = -57.f;
-	constexpr float GHelixPsi = -47.f;
-
-	/** Torsionswinkel eines gestreckten Beta-Strangs. */
-	constexpr float GStrandPhi = -139.f;
-	constexpr float GStrandPsi = 135.f;
-
-	/**
-	 * Setzt ein Atom relativ zu drei bekannten Atomen (NeRF-Verfahren).
-	 * Gegeben sind Bindungslaenge C-D, Bindungswinkel B-C-D und Torsionswinkel A-B-C-D.
-	 */
-	FVector3f PlaceAtom(const FVector3f& A, const FVector3f& B, const FVector3f& C,
-		float BondLength, float BondAngleDeg, float TorsionDeg)
-	{
-		const float Theta = FMath::DegreesToRadians(BondAngleDeg);
-		const float Torsion = FMath::DegreesToRadians(TorsionDeg);
-
-		const FVector3f BC = (C - B).GetSafeNormal();
-		const FVector3f Normal = FVector3f::CrossProduct(B - A, BC).GetSafeNormal();
-		const FVector3f InPlane = FVector3f::CrossProduct(Normal, BC);
-
-		return C
-			+ BC * (-BondLength * FMath::Cos(Theta))
-			+ InPlane * (BondLength * FMath::Sin(Theta) * FMath::Cos(Torsion))
-			+ Normal * (BondLength * FMath::Sin(Theta) * FMath::Sin(Torsion));
-	}
-
-	/**
-	 * Baut eine Peptidkette mit idealer Geometrie und festen Torsionswinkeln.
-	 *
-	 * Der Sinn: die Sekundaerstruktur-Berechnung gegen bekannte Physik pruefen statt gegen
-	 * selbst gesetzte Erwartungswerte. Eine Kette mit phi=-57 und psi=-47 *ist* eine
-	 * Alpha-Helix — wenn das Verfahren dort keine findet, liegt es am Verfahren.
-	 */
-	void BuildIdealPeptide(int32 NumResidues, float PhiDeg, float PsiDeg,
-		const TArray<FName>& ResidueNames, UMolecularStructure& Out)
-	{
-		Out.Reset();
-
-		TArray<FVector3f> N, CA, C, O;
-		N.SetNum(NumResidues);
-		CA.SetNum(NumResidues);
-		C.SetNum(NumResidues);
-		O.SetNum(NumResidues);
-
-		// Erstes Residuum als Startpunkt in der xy-Ebene.
-		N[0] = FVector3f::ZeroVector;
-		CA[0] = FVector3f(GBondNCA, 0.f, 0.f);
-
-		const float StartAngle = FMath::DegreesToRadians(GAngleNCAC);
-		CA[0] += FVector3f::ZeroVector;
-		C[0] = CA[0] + FVector3f(-FMath::Cos(StartAngle), FMath::Sin(StartAngle), 0.f) * GBondCAC;
-
-		for (int32 i = 0; i < NumResidues; ++i)
-		{
-			// Der Carbonyl-Sauerstoff steht dem folgenden Stickstoff gegenueber.
-			O[i] = PlaceAtom(N[i], CA[i], C[i], GBondCO, GAngleCACO, PsiDeg + 180.f);
-
-			if (i + 1 < NumResidues)
-			{
-				N[i + 1] = PlaceAtom(N[i], CA[i], C[i], GBondCN, GAngleCACN, PsiDeg);
-				// Omega ist in trans-Konfiguration festgenagelt, wie in fast allen Proteinen.
-				CA[i + 1] = PlaceAtom(CA[i], C[i], N[i + 1], GBondNCA, GAngleCNCA, 180.f);
-				C[i + 1] = PlaceAtom(C[i], N[i + 1], CA[i + 1], GBondCAC, GAngleNCAC, PhiDeg);
-			}
-		}
-
-		// In die Struktur uebertragen: vier Rueckgratatome je Residuum, in fester Reihenfolge.
-		const int32 NumAtoms = NumResidues * 4;
-		Out.PreallocateAtoms(NumAtoms);
-
-		FMolChain& Chain = Out.Chains.AddDefaulted_GetRef();
-		Chain.Id = FName("A");
-		Chain.FirstResidue = 0;
-		Chain.NumResidues = NumResidues;
-		Chain.FirstAtom = 0;
-		Chain.NumAtoms = NumAtoms;
-
-		static const FName NameN(TEXT("N"));
-		static const FName NameCA(TEXT("CA"));
-		static const FName NameC(TEXT("C"));
-		static const FName NameO(TEXT("O"));
-
-		int32 AtomIndex = 0;
-		for (int32 i = 0; i < NumResidues; ++i)
-		{
-			FMolResidue& Residue = Out.Residues.AddDefaulted_GetRef();
-			Residue.Name = ResidueNames.IsValidIndex(i) ? ResidueNames[i] : FName("ALA");
-			Residue.SequenceNumber = i + 1;
-			Residue.ChainIndex = 0;
-			Residue.FirstAtom = AtomIndex;
-			Residue.NumAtoms = 4;
-
-			const FVector3f Positions[4] = { N[i], CA[i], C[i], O[i] };
-			const FName Names[4] = { NameN, NameCA, NameC, NameO };
-			const uint8 Elements[4] = { 7, 6, 6, 8 };
-
-			for (int32 k = 0; k < 4; ++k)
-			{
-				Out.AtomPositions[AtomIndex] = Positions[k];
-				Out.AtomNames[AtomIndex] = Names[k];
-				Out.AtomElements[AtomIndex] = Elements[k];
-				Out.AtomResidueIndices[AtomIndex] = i;
-				Out.AtomBFactors[AtomIndex] = 0.f;
-				Out.AtomOccupancies[AtomIndex] = 1.f;
-				Out.AtomFlags[AtomIndex] = MolAtom_Backbone | (k == 1 ? MolAtom_Anchor : 0);
-				++AtomIndex;
-			}
-		}
-
-		Out.FinalizeAfterLoad();
-	}
+	constexpr float GHelixPhi = MolTestPeptide::HelixPhi;
+	constexpr float GHelixPsi = MolTestPeptide::HelixPsi;
+	constexpr float GStrandPhi = MolTestPeptide::StrandPhi;
+	constexpr float GStrandPsi = MolTestPeptide::StrandPsi;
 
 	int32 CountKind(const UMolecularStructure& Structure, EMolSecondaryStructure Kind)
 	{

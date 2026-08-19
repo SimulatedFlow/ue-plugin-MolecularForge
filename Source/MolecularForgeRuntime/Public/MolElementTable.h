@@ -55,4 +55,16 @@ namespace MolecularForge
 	 * Name ungetrimmt mit voller Breite von 4 Zeichen erwartet.
 	 */
 	MOLECULARFORGERUNTIME_API uint8 GuessAtomicNumberFromAtomName(FStringView PaddedAtomName, bool bIsHetatm);
+
+	/**
+	 * Mittlere Atommasse in atomaren Masseneinheiten (Standardatomgewicht).
+	 *
+	 * Steht bewusst in einer eigenen Tabelle und nicht als Feld in FMolElementInfo: die
+	 * Masse wird nur fuer Schwerpunktrechnungen gebraucht, waehrend Radien und Farben in
+	 * jeder Darstellung vorkommen. Sie dort einzureihen wuerde die Struktur vergroessern,
+	 * die im heissen Pfad der Bindungsableitung millionenfach gelesen wird.
+	 *
+	 * Bei unbekannter Ordnungszahl kommt 0 zurueck.
+	 */
+	MOLECULARFORGERUNTIME_API float GetAtomicMass(uint8 AtomicNumber);
 }

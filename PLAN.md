@@ -12,9 +12,14 @@ Kern in einem Satz: *PDB-/mmCIF-Datei oder UniProt-ID rein → performantes, ani
 
 *Letzte Aktualisierung: 2026-08-19.*
 
-**Phase 1 und 2 sind fertig** (bis auf das Impostor-Material, das den Editor braucht),
-**von Phase 3 stehen Oberfläche und Niagara-Anbindung.** Alle vier Module bauen sauber
-gegen UE 5.8; **zweiunddreißig** Automationstests laufen grün.
+**Alles, was ohne Editor-GUI machbar war, ist fertig.** Phasen 1 bis 4 stehen, soweit sie
+aus Code bestehen. Alle **fünf** Module bauen sauber gegen UE 5.8; **dreiundfünfzig**
+Automationstests laufen grün.
+
+Was jetzt noch fehlt, braucht ausnahmslos den geöffneten Editor: das Impostor-Material,
+die Beispiel-Level, Screenshots, Video und das Fab-Paket. Der nächste Schritt ist deshalb
+keine Programmierarbeit, sondern der erste Blick auf das Bild — die Darstellung wurde bis
+heute kein einziges Mal gerendert.
 
 Damit gibt es fünf Darstellungen: Space-Filling, Ball-and-Stick, Rückgrat, Cartoon und
 Oberfläche, alle über `AMolecularStructureActor` umschaltbar.
@@ -35,10 +40,29 @@ Bauen und Testen ohne Editor-GUI:
 ```
 Vorher prüfen, ob `UnrealEditor.exe` läuft — der Testlauf sperrt sonst gegen die offene Sitzung.
 
-**Als Nächstes:** Rest von Phase 3 — MD-Trajektorien (XTC/DCD abspielen), dann Mess- und
-Selektionswerkzeuge. Danach Phase 4 (Mass). Alles ohne Editor machbar.
+**Als Nächstes, sobald der Editor zur Verfügung steht** — in dieser Reihenfolge:
+
+1. **Erstes Bild.** `AMolecularStructureActor` ins Level, eine PDB-Datei laden, alle fünf
+   Darstellungen durchschalten. Das ist die einzige noch offene Frage aus Phase 1.
+2. **Impostor-Material** (Pixel Depth Offset) statt Engine-Kugel — der Performance-Sprung,
+   der 150.000 Atome erst möglich macht. Die Komponente liefert Farbe und Radius schon
+   als Per-Instance Custom Data, das Material muss nur andocken.
+3. **Echten Abruf einmal von Hand probieren** (RCSB und AlphaFold) — automatisiert ist er
+   bewusst nicht getestet, siehe offene Punkte.
+4. **Demo-Struktur mitliefern** und damit die Testlücke bei der Faltblatt-Erkennung schließen.
+5. Beispiel-Level, Screenshots, Video, Fab-Paket.
 
 ### Offene Punkte
+
+**XTC wird vorerst nicht gelesen.** Es ist das verbreitetere Trajektorienformat (GROMACS),
+komprimiert aber mit einem eigenen Ganzzahlverfahren, dessen Umsetzung mehrere hundert
+Zeilen kniffliger Bitschieberei braucht. Ein Fehler darin erzeugt keine Fehlermeldung,
+sondern Koordinaten, die plausibel aussehen und falsch sind — bei einer Trajektorie fällt
+das niemandem auf. DCD ist dagegen ein schlichtes Binärformat mit Längenmarken um jeden
+Block, an denen sich beim Lesen fortlaufend prüfen lässt, ob man noch richtig liegt.
+**Für das Listing heißt das: „DCD" schreiben, nicht „MD-Trajektorien" pauschal.** Wer XTC
+braucht, kann mit `gmx trjconv` umwandeln — das ist ein Einzeiler und sollte so in der Doku
+stehen. Nachrüsten lohnt erst, wenn es jemand verlangt.
 
 **Entscheidung Niagara: Array-Parameter statt eigenem Data Interface.** Ein eigenes
 Interface könnte ohne Umkopieren direkt auf die Strukturdaten zugreifen und wäre bei
@@ -197,15 +221,31 @@ Der Code ist getestet, das Bild nicht.
       über die Struktur statt vorne abzuschneiden.
       **Bewusst über Array-Parameter statt über ein eigenes Data Interface** — Begründung
       unter „Offene Punkte".
-- [ ] MD-Trajektorien (XTC/DCD) als Positionsanimation abspielen
-- [ ] Messwerkzeuge (Abstand/Winkel), Selektionssprache (`chain A and resi 1-50`)
+- [x] MD-Trajektorien abspielen: `UMolecularTrajectory` (flaches Array, Bild für Bild),
+      DCD-Leser für beide Byte-Reihenfolgen, `UMolecularTrajectoryPlayer` mit Interpolation,
+      Schleife, Schieberegler-Anbindung und Wiederherstellen des Ausgangszustands.
+      Kugeln und Stäbe bekommen dafür ein schnelles Aktualisieren, das nur
+      Instanztransformationen neu schreibt statt alles neu aufzubauen.
+      **XTC ist bewusst nicht dabei** — Begründung unter „Offene Punkte".
+- [x] Selektionssprache in PyMOL-Schreibweise: Klassen (`protein`, `water`, `ligand`,
+      `backbone`, `sidechain`, …), Terme mit Argument (`chain`, `resi`, `resn`, `name`,
+      `element`, `ss`, `b > 50`), `within X of …`, dazu `and`/`or`/`not` und Klammern.
+      Fehler werden mit Grund und Zeichenposition gemeldet.
+- [x] Messwerkzeuge: Abstand, Bindungswinkel, Torsionswinkel, Mittelpunkt, Massenschwerpunkt,
+      Trägheitsradius, Hülle, RMSD (auch maskiert). Atommassen als eigene Tabelle.
+- [x] Beides über Blueprint erreichbar (`UMolecularForgeLibrary`)
 
 ### Phase 4 — Maßstabssprung (MassAI)
-- [ ] `MolecularForgeMass`: Fragmente, Traits, LOD, Repräsentation
-- [ ] Brownsche Diffusion als Mass-Processor
-- [ ] Bindungs-/Kollisionsereignisse über Nachbarschaftsgitter
-- [ ] Zell-Innenraum-Szene: Organellen + Molekülpopulationen
+- [x] `MolecularForgeMass`: Fragmente, Tag, Const-Shared-Parameter, `UMolMesoscaleTrait`
+- [x] Brownsche Diffusion als Mass-Processor (`UMassProcessor_MolecularMotion`), mit
+      Randbedingung und Detailstufe im selben Durchlauf — alle drei fassen dieselben Daten an
+- [x] Bindungs-/Löseereignisse über Nachbarschaftsgitter (`UMassProcessor_MolecularBinding`),
+      zweistufig: serielles Abbild + Gitter, dann parallele Entscheidung
+- [x] `AMolecularMesoRenderer`: gestaffelte Darstellung — echte Atome für die nächsten
+      Moleküle aus einem festen Vorrat, Instanzen für die mittlere Stufe, Kugeln für die ferne
+- [ ] Zell-Innenraum-Szene: Organellen + Molekülpopulationen ⏸ *braucht Editor*
 - [ ] Demo-Level „Partielle Zellreprogrammierung": Yamanaka-Faktoren binden an Chromatin
+      ⏸ *braucht Editor*
 
 ### Phase 5 — Fab-Reife
 - [ ] Beispiel-Level (Showcase + Minimal-Setup)

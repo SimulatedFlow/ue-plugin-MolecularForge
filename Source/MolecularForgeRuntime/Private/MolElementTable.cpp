@@ -138,6 +138,30 @@ namespace
 	};
 
 	/**
+	 * Standardatomgewichte in atomaren Masseneinheiten, Index gleich Ordnungszahl.
+	 * Fuer Elemente ohne stabiles Isotop steht die Massenzahl des langlebigsten.
+	 */
+	const float GAtomicMasses[MolecularForge::MaxAtomicNumber + 1] =
+	{
+		  0.000f,
+		  1.008f,   4.003f,   6.940f,   9.012f,  10.810f,  12.011f,  14.007f,  15.999f,
+		 18.998f,  20.180f,  22.990f,  24.305f,  26.982f,  28.085f,  30.974f,  32.060f,
+		 35.450f,  39.950f,  39.098f,  40.078f,  44.956f,  47.867f,  50.942f,  51.996f,
+		 54.938f,  55.845f,  58.933f,  58.693f,  63.546f,  65.380f,  69.723f,  72.630f,
+		 74.922f,  78.971f,  79.904f,  83.798f,  85.468f,  87.620f,  88.906f,  91.224f,
+		 92.906f,  95.950f,  98.000f, 101.070f, 102.906f, 106.420f, 107.868f, 112.414f,
+		114.818f, 118.710f, 121.760f, 127.600f, 126.904f, 131.293f, 132.905f, 137.327f,
+		138.905f, 140.116f, 140.908f, 144.242f, 145.000f, 150.360f, 151.964f, 157.250f,
+		158.925f, 162.500f, 164.930f, 167.259f, 168.934f, 173.045f, 174.967f, 178.486f,
+		180.948f, 183.840f, 186.207f, 190.230f, 192.217f, 195.084f, 196.967f, 200.592f,
+		204.380f, 207.200f, 208.980f, 209.000f, 210.000f, 222.000f, 223.000f, 226.000f,
+		227.000f, 232.038f, 231.036f, 238.029f, 237.000f, 244.000f, 243.000f, 247.000f,
+		247.000f, 251.000f, 252.000f, 257.000f, 258.000f, 259.000f, 266.000f, 267.000f,
+		268.000f, 269.000f, 270.000f, 269.000f, 278.000f, 281.000f, 282.000f, 285.000f,
+		286.000f, 289.000f, 290.000f, 293.000f, 294.000f, 294.000f
+	};
+
+	/**
 	 * Symbol -> Ordnungszahl. Der Schluessel ist das auf Grossbuchstaben normierte Symbol,
 	 * in zwei Bytes gepackt: (erstes Zeichen << 8) | zweites Zeichen, zweites Zeichen 0 bei
 	 * einbuchstabigen Symbolen. Damit ist der Lookup ein Integer-Hash ohne String-Allokation,
@@ -174,6 +198,11 @@ namespace MolecularForge
 	const FMolElementInfo& GetElement(uint8 AtomicNumber)
 	{
 		return GElementTable[AtomicNumber <= MaxAtomicNumber ? AtomicNumber : 0];
+	}
+
+	float GetAtomicMass(uint8 AtomicNumber)
+	{
+		return GAtomicMasses[AtomicNumber <= MaxAtomicNumber ? AtomicNumber : 0];
 	}
 
 	uint8 AtomicNumberFromSymbol(FStringView Symbol)
