@@ -54,7 +54,7 @@ mit bekanntem Faltblattanteil prüfen.
 
 **Frage an Silvan — Copyright-Zeile.** Die Header stehen inzwischen auf
 `Copyright Simulated Flow`. Nach der bisherigen Aufteilung gehören Plugins zum Freelancer
-Silvan Teufel und nur Merch/Hardware zur UG. Ich habe nichts zurückgedreht. Wenn die
+Simulated Flow und nur Merch/Hardware zur UG. Ich habe nichts zurückgedreht. Wenn die
 Aufteilung weiter gilt, muss das vor dem Fab-Listing einheitlich sein — die Zeile steht
 in jeder Datei und im `.uplugin` unter `CreatedBy`.
 
