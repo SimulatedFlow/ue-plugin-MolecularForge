@@ -73,12 +73,18 @@ struct MOLECULARFORGEMASS_API FMolMesoscaleParameters : public FMassConstSharedF
 	/**
 	 * Diffusionskoeffizient in Angstroem^2 je Sekunde.
 	 *
-	 * Der Standardwert entspricht der Groessenordnung eines mittleren globulaeren
-	 * Proteins in Wasser. Er ist bewusst in der Einheit der Fachliteratur angegeben,
-	 * damit sich ein gemessener Wert unmittelbar einsetzen laesst.
+	 * Die Einheit ist die der Fachliteratur, damit sich ein gemessener Wert unmittelbar
+	 * einsetzen laesst. Der Standardwert ist aber ausdruecklich *kein* physikalischer:
+	 * ein mittleres Protein in Wasser hat rund 10^8 A^2/s, und bei sechzig Bildern je
+	 * Sekunde legte es damit knapp zwei Mikrometer je Bild zurueck. Auf dem Bildschirm
+	 * waere das kein Wimmeln, sondern Rauschen — jedes Molekuel stuende in jedem Bild
+	 * woanders, ohne erkennbaren Weg dazwischen.
+	 *
+	 * Wer echte Zeit will, traegt den Literaturwert ein und verlangsamt stattdessen die
+	 * Simulationszeit. Wer ein Bild will, laesst diesen Wert stehen.
 	 */
 	UPROPERTY(EditAnywhere, Category = "Diffusion", meta = (ClampMin = "0.0"))
-	float DiffusionCoefficient = 1000000.f;
+	float DiffusionCoefficient = 200.f;
 
 	/** Diffusion eines gebundenen Molekuels, als Anteil des freien Werts. */
 	UPROPERTY(EditAnywhere, Category = "Diffusion", meta = (ClampMin = "0.0", ClampMax = "1.0"))

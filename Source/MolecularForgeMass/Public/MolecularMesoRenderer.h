@@ -108,4 +108,7 @@ private:
 	TArray<FTransform> TransformScratch;
 
 	int32 LastHiddenCount = 0;
+
+	/** Damit die Verteilung der Detailstufen genau einmal im Log landet, nicht je Bild. */
+	bool bLoggedDistribution = false;
 };

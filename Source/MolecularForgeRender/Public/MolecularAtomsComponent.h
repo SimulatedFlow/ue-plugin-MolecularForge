@@ -85,13 +85,14 @@ public:
 	 * Millionen Dreiecken und 300.000. Die Silhouette wird dabei nicht schlechter,
 	 * sondern besser: sie ist analytisch exakt statt facettiert.
 	 *
-	 * Ausschalten lohnt eigentlich nur, wenn ein Effekt echte Geometrie braucht — etwa
-	 * ein Renderpfad, der mit Tiefenversatz nicht umgehen kann.
+	 * ACHTUNG: derzeit voreingestellt AUS. Das Material ist gebaut, aber die Ausrichtung
+	 * des Vierecks im Vertexshader liefert noch nichts Sichtbares — siehe die offenen
+	 * Punkte im Bauplan. Bis das steht, zeichnet das Plugin echte Kugelgeometrie.
 	 */
 	UPROPERTY(EditAnywhere, BlueprintReadWrite, Category = "MolecularForge")
-	bool bUseImpostorSpheres = true;
+	bool bUseImpostorSpheres = false;
 
-	/** Material der Impostor-Darstellung. */
+	/** Material der Impostor-Darstellung. Noch nicht einsatzbereit. */
 	UPROPERTY(EditAnywhere, BlueprintReadWrite, Category = "MolecularForge", meta = (AdvancedDisplay))
 	TObjectPtr<UMaterialInterface> ImpostorMaterial;
 

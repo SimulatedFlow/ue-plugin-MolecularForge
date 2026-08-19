@@ -21,6 +21,19 @@ MATERIAL_DIR = "/MolecularForge/Materials"
 # liegt es weiter vorn.
 DIAGNOSTIC_FLAT_QUADS = False
 
+# Fehlersuche: faerbt die flachen Vierecke mit der lokalen Vertexposition ein, statt mit
+# der Atomfarbe. Ein Farbverlauf ueber jedes Viereck heisst, der Wert unterscheidet sich
+# von Ecke zu Ecke und taugt zur Ausrichtung. Eine einheitliche Flaeche heisst, er ist je
+# Instanz konstant — dann ist es die Instanzposition und nicht die Eckenlage.
+DIAGNOSTIC_SHOW_LOCAL_POSITION = False
+
+# Fehlersuche am Vertexfarben-Material: gibt die Vertexfarbe zusaetzlich als Eigenleuchten
+# aus, mit einem festen Sockel. Drei Ausgaenge lassen sich damit in einem Durchlauf
+# unterscheiden — schwarz heisst, das Material wird nicht benutzt; ein gleichmaessiges
+# schwaches Glimmen heisst, es wird benutzt, aber die Vertexfarben sind schwarz; farbiges
+# Leuchten heisst, beides ist in Ordnung und es liegt an der Beleuchtung.
+DIAGNOSTIC_VERTEX_COLOR_GLOW = False
+
 ATOM_MATERIAL = "M_MF_Atoms"
 IMPOSTOR_MATERIAL = "M_MF_AtomImpostor"
 VERTEX_MATERIAL = "M_MF_VertexColor"
@@ -279,9 +292,23 @@ def build_impostor_material():
     attributes = MEL.create_material_expression(
         material, unreal.MaterialExpressionMakeMaterialAttributes, -400, 0)
 
-    MEL.connect_material_expressions(append_rgb, "", attributes, "BaseColor")
+    if DIAGNOSTIC_SHOW_LOCAL_POSITION:
+        probe = custom_node(
+            material, "Diagnose: lokale Position sichtbar machen",
+            """
+	return abs(LocalPos) / 50.0f;
+""",
+            unreal.CustomMaterialOutputType.CMOT_FLOAT3, -700, -500, ["LocalPos"])
 
-    if DIAGNOSTIC_FLAT_QUADS:
+        probe_source = MEL.create_material_expression(
+            material, unreal.MaterialExpressionLocalPosition, -1000, -500)
+        MEL.connect_material_expressions(probe_source, "", probe, "LocalPos")
+        MEL.connect_material_expressions(probe, "", attributes, "EmissiveColor")
+        LOG("  ACHTUNG: Diagnose — Vierecke zeigen die lokale Position als Farbe.")
+    else:
+        MEL.connect_material_expressions(append_rgb, "", attributes, "BaseColor")
+
+    if DIAGNOSTIC_FLAT_QUADS or DIAGNOSTIC_SHOW_LOCAL_POSITION:
         LOG("  ACHTUNG: Impostor im Diagnosemodus — flache Vierecke ohne Ausrichtung.")
     else:
         MEL.connect_material_expressions(normal, "", attributes, "Normal")
@@ -331,6 +358,20 @@ def build_vertex_color_material():
     vertex_color.set_editor_property("desc", "Farbe aus dem Mesh")
 
     MEL.connect_material_property(vertex_color, "", unreal.MaterialProperty.MP_BASE_COLOR)
+
+    if DIAGNOSTIC_VERTEX_COLOR_GLOW:
+        glow = MEL.create_material_expression(
+            material, unreal.MaterialExpressionMultiply, -300, -300)
+        MEL.connect_material_expressions(vertex_color, "", glow, "A")
+        glow.set_editor_property("const_b", 2.0)
+
+        base = MEL.create_material_expression(
+            material, unreal.MaterialExpressionAdd, -150, -300)
+        MEL.connect_material_expressions(glow, "", base, "A")
+        base.set_editor_property("const_b", 0.12)
+
+        MEL.connect_material_property(base, "", unreal.MaterialProperty.MP_EMISSIVE_COLOR)
+        LOG("  ACHTUNG: Diagnose — Vertexfarbe wird zusaetzlich als Eigenleuchten ausgegeben.")
 
     MEL.connect_material_property(
         scalar(material, 0.0, -300, 100, "Metallisch"), "", unreal.MaterialProperty.MP_METALLIC)

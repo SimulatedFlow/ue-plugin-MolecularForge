@@ -19,12 +19,25 @@ gegen UE 5.8; **53** Automationstests grün, dazu die Prüfung gegen echte Archi
 CPK-Farben — roter Sauerstoff, blauer Stickstoff, grauer Kohlenstoff. Damit ist die Kette
 von der Elementtabelle über die Per-Instance-Daten bis ins Material nachweislich dicht.
 
-Offen am Material ist der zweite Teil: **Impostor-Kugeln**. Zurzeit hängt an jedem Atom
-das Engine-Kugelmesh mit 382 Dreiecken — bei 150.000 Atomen wären das 57 Millionen. Mit
-Impostoren sind es zwei je Atom.
+**Alle fünf Darstellungen sind im Bild nachgewiesen** — Space-Filling, Ball-and-Stick,
+Rückgrat, Cartoon und Oberfläche. Das Vergleichsbild liegt unter `Docs/Bilder/`.
 
-**Kleinigkeit für später:** das Hauptlicht im Schaulevel ist mit Stärke 6 etwas zu hart,
-die hellen Atome laufen aus. Beim Aufräumen des Levels auf etwa 3,5 senken.
+**Der Abruf läuft gegen die echten Server.** RCSB und AlphaFold beide geprüft, samt
+Zwischenspeicher. Damit ist jeder Teil des Plugins mindestens einmal wirklich ausgeführt
+worden — bis auf die Impostoren.
+
+**Die Impostor-Kugeln sind vorerst gescheitert** und stehen auf „aus". Das Material ist
+gebaut, aber die Ausrichtung des Vierecks im Vertexshader liefert nichts Sichtbares —
+Einzelheiten und der nächste konkrete Schritt stehen unter den offenen Punkten. Bis dahin
+zeichnet das Plugin echte Kugelgeometrie, was für einige tausend Atome flüssig läuft, aber
+nicht für hunderttausende.
+
+**Kleinigkeiten für das Aufräumen der Level:**
+- Hauptlicht im *Schaulevel* steht noch auf Stärke 6 und läuft aus; im Vergleichslevel
+  sind es bereits 3,5. Angleichen.
+- Die Gauß-Oberfläche wirkt bei Blobbiness −2,3 recht knubbelig — jedes Atom zeichnet
+  sich einzeln ab. Für Schaubilder wäre ein weicherer Wert (etwa −1,5) gefälliger; die
+  Voreinstellung sollte trotzdem beim physikalisch üblichen Wert bleiben.
 
 Damit gibt es fünf Darstellungen: Space-Filling, Ball-and-Stick, Rückgrat, Cartoon und
 Oberfläche, alle über `AMolecularStructureActor` umschaltbar.
@@ -62,11 +75,27 @@ Silvan hat den Editor freigegeben. Reihenfolge ist bindend.
       (Farbe aus Vertices, für Band und Oberfläche). Beide sind als Eigenschaft an den
       Komponenten hinterlegt und werden beim Registrieren gesetzt. Nachgewiesen: roter
       Sauerstoff, blauer Stickstoff, grauer Kohlenstoff im Bild.
-- [ ] **Material, zweiter Teil: Impostor-Kugeln** über Pixel Depth Offset statt
-      Engine-Kugelmesh. Das ist der Performance-Sprung — 382 Dreiecke je Atom gegen 2.
-      **Als Nächstes.**
-- [ ] Alle fünf Darstellungen durchschalten und je ein Bild ablegen
-- [ ] Echten Abruf von Hand probieren (RCSB und AlphaFold)
+- [~] **Material, zweiter Teil: Impostor-Kugeln** — Material gebaut (`M_MF_AtomImpostor`),
+      Umschalter an der Komponente vorhanden, **aber nicht einsatzbereit**. Voreinstellung
+      steht deshalb auf echten Kugeln. Ausführlich unter „Offene Punkte".
+- [x] **Alle fünf Darstellungen nachgewiesen.** `Tools/build_comparison_level.py` baut ein
+      Level, das Space-Filling, Ball-and-Stick, Rückgrat, Cartoon und Oberfläche
+      nebeneinander zeigt (Crambin, 1CRN). Ein Durchlauf statt fünf — und es ist zugleich
+      das Bild, das im Listing am meisten erklärt. Liegt unter
+      `Docs/Bilder/01_Darstellungsarten.png`.
+      Zahlen aus dem Aufbau: 327 Kugeln, 337 Bindungen, 6.504 Dreiecke Band,
+      70.740 Dreiecke Oberfläche. Das Cartoon-Band zeigt Helices, Faltblatt-Pfeile und
+      Schleifen in den erwarteten Farben.
+- [x] **Echter Abruf nachgewiesen** — und zwar nicht von Hand, sondern als drei
+      Automationstests unter `Netzabruf.*` (bewusst außerhalb des Namens `MolecularForge`,
+      damit die reguläre Suite ohne Internet grün bleibt; geprüft, dass sie dort nicht
+      mitläuft). Latente Befehle sind hier der richtige Ort: der Editor tickt dabei auch
+      das HTTP-Modul, ein Kommandozeilenskript täte das nicht.
+      Aufruf: `-ExecCmds="Automation RunTests Netzabruf; Quit"`
+      - RCSB: `https://files.rcsb.org/download/1CRN.cif` → 327 Atome ✅
+      - AlphaFold: API aufgelöst zu `.../files/AF-P69905-F1-model_v6.cif` → 1077 Atome,
+        als pLDDT erkannt, Attribution gesetzt ✅
+      - Zweiter Abruf kommt aus dem Zwischenspeicher ✅
 - [ ] Mesoskala-Demo: Molekülpopulation mit Diffusion und Bindung
 - [ ] Beispiel-Level aufräumen, Screenshots, Video
 - [ ] Fab-Paket (TRC-konform), README, Attributionstext
@@ -88,6 +117,12 @@ UnrealEditor.exe <uproject> /MolecularForge/Maps/L_MF_Showcase -game -windowed `
 verweigert die Engine das Material auf instanzierten Meshes und nimmt stillschweigend das
 graue Standardmaterial. Der Hinweis steht nur im Log, im Bild sieht man bloß farblose Kugeln.
 
+*Ein Prozedural-Mesh hat erst dann einen Materialschlitz, wenn es einen Abschnitt hat.*
+Wird das Material vorher gesetzt — etwa beim Registrieren der Komponente —, verpufft die
+Zuweisung, und Band und Oberfläche rendern schwarz. Richtig ist: unmittelbar nach
+`CreateMeshSection` setzen. Auch hier hat wieder eine Entweder-oder-Probe geholfen: dem
+Material ein festes Eigenleuchten geben. Blieb es dunkel, wurde es gar nicht benutzt.
+
 *Materialzuweisung im Komponentenkonstruktor überlebt das Speichern eines Levels nicht.*
 Die Materialliste nennt danach zwar das richtige Material, gerendert wird trotzdem das der
 Grundform. Richtig ist: das Material als `UPROPERTY` halten und in `OnRegister` setzen.
@@ -105,6 +140,33 @@ Ohne das läuft `ConfigureQueries` in eine Zusicherung — und zwar erst beim We
 beim Übersetzen. Der Editor stürzt dann kommentarlos ab.
 
 ### Offene Punkte
+
+**Impostor-Kugeln: abgebrochen, nicht aufgegeben.** Das Material steht als
+`M_MF_AtomImpostor` und ist vollständig verdrahtet — Kreisausschnitt, Kugelnormale,
+Tiefenversatz, Farbe. Was fehlt, ist genau ein Stück: **im Vertexshader an den Versatz
+des Vertex vom Mittelpunkt seiner Instanz zu kommen.** Ohne den lässt sich das Viereck
+nicht zur Kamera drehen.
+
+Probiert und je einmal gerendert:
+- `WorldPosition` minus `ObjectPositionWS` → schwarz
+- `PreSkinnedPosition` → schwarz (liefert bei Static Meshes offenbar null)
+- `LocalPosition` → auch als Diagnosefarbe nichts sichtbar
+
+Was dabei **bewiesen** wurde: mit abgeschalteter Ausrichtung rendern die Vierecke sauber
+an den Atompositionen. Mesh, Instanzen, Per-Instance-Daten und Materialzuweisung sind also
+alle in Ordnung — der Fehler sitzt ausschließlich in der Ausrichtung. Der Diagnoseschalter
+`DIAGNOSTIC_FLAT_QUADS` in `build_materials.py` stellt diesen Zustand wieder her.
+
+**Konkreter nächster Schritt:** nicht weiter mit eigenem HLSL raten, sondern das Material
+einmal von Hand im Editor zusammenklicken und nachsehen, welchen Knoten Unreal selbst für
+die Eckenlage benutzt — oder gleich eine mitgelieferte Billboard-Materialfunktion über
+`MaterialExpressionMaterialFunctionCall` einbinden. Ein Durchlauf im geöffneten Editor
+beantwortet das schneller als weitere Rateversuche über die Kommandozeile.
+
+**Folge für das Fab-Listing:** solange das nicht steht, darf **„150.000 Atome in Echtzeit"
+nicht behauptet werden.** Zurzeit hängt an jedem Atom echte Kugelgeometrie; die Grenze
+liegt bei einigen zehntausend Atomen, nicht bei hunderttausenden. Was stimmt und gesagt
+werden darf: mehrere tausend Atome laufen flüssig, und die Darstellung ist korrekt.
 
 **XTC wird vorerst nicht gelesen.** Es ist das verbreitetere Trajektorienformat (GROMACS),
 komprimiert aber mit einem eigenen Ganzzahlverfahren, dessen Umsetzung mehrere hundert
@@ -128,11 +190,11 @@ MD-Trajektorien stehen** — dort wird pro Bild neu gesetzt, und erst dann zahlt
 eigene Interface aus. Silvan sollte wissen, dass „Custom Niagara DI" damit vorerst *nicht*
 im Fab-Listing behauptet werden darf.
 
-**Der Abruf selbst ist nicht testbar.** Die Tests decken Kennungsprüfung, Adressbildung und
-Zwischenspeicher ab — alles, was ohne Netz entscheidbar ist. Ein Test, der wirklich bei RCSB
-anfragt, prüft die Internetverbindung und nicht das Plugin: er wird rot, wenn EMBL-EBI wartet,
-und grün, wenn unser Code kaputt ist, aber der Cache noch etwas hergibt. Der echte Abruf muss
-einmal von Hand probiert werden, sobald der Editor zur Verfügung steht.
+**Der Abruf ist geprüft — und die zweistufige AlphaFold-Auflösung hat sich bezahlt gemacht.**
+Die API löste auf `AF-P69905-F1-model_v6.cif` auf. Als der Code entstand, war v4 aktuell.
+Hätte ich die Datei-Adresse geraten statt sie zu erfragen, wäre das Plugin heute kaputt —
+und zwar still, mit einem 404 statt einer Struktur. Die Entscheidung steht damit nicht mehr
+nur als Begründung im Kopf, sondern als Messwert.
 
 **Testlücke Faltblatt-Erkennung.** Helix ist gegen eine ideal gebaute Geometrie geprüft
 (φ=−57°, ψ=−47° *ist* eine α-Helix — findet das Verfahren dort keine, liegt es am

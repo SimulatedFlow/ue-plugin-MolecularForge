@@ -116,6 +116,18 @@ void UMolecularCartoonComponent::RebuildMesh()
 		TArray<FProcMeshTangent>(),
 		/*bCreateCollision=*/false);
 
+	// Das Material erst jetzt setzen, nicht schon beim Registrieren.
+	//
+	// Ein Prozedural-Mesh hat so viele Materialschlitze, wie es Abschnitte hat. Vor dem
+	// ersten Abschnitt gibt es keinen Schlitz null, und die Zuweisung verpufft — im Bild
+	// sah man dann eine schwarze Flaeche, obwohl die Materialliste hinterher das richtige
+	// nannte. Gefunden wurde das, indem das Material zusaetzlich ein festes Eigenleuchten
+	// bekam: das blieb ebenfalls aus, also wurde es gar nicht herangezogen.
+	if (RibbonMaterial)
+	{
+		SetMaterial(0, RibbonMaterial);
+	}
+
 	LastTriangleCount = Mesh.NumTriangles();
 
 	UE_LOG(LogMolecularForge, Verbose,

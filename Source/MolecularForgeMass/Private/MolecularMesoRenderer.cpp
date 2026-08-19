@@ -53,7 +53,11 @@ void AMolecularMesoRenderer::BeginPlay()
 		return Mesh ? Mesh : LoadObject<UStaticMesh>(nullptr, FallbackPath);
 	};
 
-	BackboneInstances->SetStaticMesh(ResolveMesh(BackboneMesh, TEXT("/Engine/BasicShapes/Cylinder.Cylinder")));
+	// Auch die mittlere Stufe ist voreingestellt eine Kugel. Ein Zylinder waere optisch
+	// leichter von der fernen Stufe zu unterscheiden, sieht als Molekuel aber falsch aus —
+	// und das Bild soll ein Zellinneres zeigen und nicht ein Lager voller Fassdauben.
+	// Wer eine eigene Ersatzform hat, traegt sie oben ein.
+	BackboneInstances->SetStaticMesh(ResolveMesh(BackboneMesh, TEXT("/Engine/BasicShapes/Sphere.Sphere")));
 	BlobInstances->SetStaticMesh(ResolveMesh(BlobMesh, TEXT("/Engine/BasicShapes/Sphere.Sphere")));
 
 	UWorld* World = GetWorld();
@@ -292,4 +296,15 @@ void AMolecularMesoRenderer::Tick(float DeltaSeconds)
 
 	UpdateInstancedLevel(BackboneInstances, BackboneDetail, /*bScaleByRadius=*/true);
 	UpdateInstancedLevel(BlobInstances, BlobDetail, /*bScaleByRadius=*/true);
+
+	// Einmal melden, wie sich die Molekuele auf die Stufen verteilen. Ohne diese Zeile
+	// liesse sich am Bild nicht unterscheiden, ob die Staffelung arbeitet oder ob alles
+	// zufaellig in derselben Stufe gelandet ist — beide Stufen zeichnen Kugeln.
+	if (!bLoggedDistribution && (FullDetail.Num() + BackboneDetail.Num() + BlobDetail.Num()) > 0)
+	{
+		bLoggedDistribution = true;
+		UE_LOG(LogMolecularForge, Log,
+			TEXT("Mesoskala-Darstellung: %d nah, %d mittel, %d fern, %d ausgeblendet."),
+			FullDetail.Num(), BackboneDetail.Num(), BlobDetail.Num(), LastHiddenCount);
+	}
 }

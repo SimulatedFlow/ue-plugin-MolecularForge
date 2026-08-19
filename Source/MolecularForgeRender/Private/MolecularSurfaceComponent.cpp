@@ -97,6 +97,13 @@ void UMolecularSurfaceComponent::RebuildMesh()
 		TArray<FProcMeshTangent>(),
 		/*bCreateCollision=*/false);
 
+	// Siehe die gleichlautende Anmerkung am Cartoon-Band: vor dem ersten Abschnitt hat
+	// ein Prozedural-Mesh keinen Materialschlitz, und die Zuweisung verpufft.
+	if (SurfaceMaterial)
+	{
+		SetMaterial(0, SurfaceMaterial);
+	}
+
 	LastTriangleCount = Mesh.NumTriangles();
 }
 
