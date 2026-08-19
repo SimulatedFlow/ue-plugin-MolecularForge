@@ -12,6 +12,10 @@
 #include "GameFramework/PlayerController.h"
 
 UMassProcessor_MolecularMotion::UMassProcessor_MolecularMotion()
+	// Die Abfrage muss hier an den Prozessor gebunden werden. Ohne das laeuft
+	// ConfigureQueries in eine Zusicherung — und zwar erst zur Laufzeit beim
+	// Weltstart, nicht beim Uebersetzen.
+	: MotionQuery(*this)
 {
 	bAutoRegisterWithProcessingPhases = true;
 	ExecutionFlags = static_cast<int32>(EProcessorExecutionFlags::AllNetModes);

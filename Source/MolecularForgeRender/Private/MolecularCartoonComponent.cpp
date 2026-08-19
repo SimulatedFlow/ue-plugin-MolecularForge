@@ -3,6 +3,8 @@
 #include "MolecularCartoonComponent.h"
 #include "MolBackboneSpline.h"
 #include "MolecularStructure.h"
+#include "Materials/MaterialInterface.h"
+#include "UObject/ConstructorHelpers.h"
 
 UMolecularCartoonComponent::UMolecularCartoonComponent(const FObjectInitializer& ObjectInitializer)
 	: Super(ObjectInitializer)
@@ -12,11 +14,26 @@ UMolecularCartoonComponent::UMolecularCartoonComponent(const FObjectInitializer&
 	// Das Band ist Anschauung, keine Spielgeometrie. Kollision kostet hier nur Aufbauzeit.
 	SetCollisionEnabled(ECollisionEnabled::NoCollision);
 	bUseComplexAsSimpleCollision = true;
+
+	// Das Band traegt seine Farbe in den Vertices — anders als Kugeln und Staebe ist es
+	// ein einziges Mesh und kann keine Instanzdaten haben.
+	static ConstructorHelpers::FObjectFinder<UMaterialInterface> DefaultRibbonMaterial(
+		TEXT("/MolecularForge/Materials/M_MF_VertexColor.M_MF_VertexColor"));
+	if (DefaultRibbonMaterial.Succeeded())
+	{
+		RibbonMaterial = DefaultRibbonMaterial.Object;
+		SetMaterial(0, RibbonMaterial);
+	}
 }
 
 void UMolecularCartoonComponent::OnRegister()
 {
 	Super::OnRegister();
+
+	if (RibbonMaterial)
+	{
+		SetMaterial(0, RibbonMaterial);
+	}
 
 	if (Structure && GetNumSections() == 0)
 	{

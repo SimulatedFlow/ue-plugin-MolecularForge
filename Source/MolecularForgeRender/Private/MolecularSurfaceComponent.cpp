@@ -3,6 +3,8 @@
 #include "MolecularSurfaceComponent.h"
 #include "MolSurfaceBuilder.h"
 #include "MolecularStructure.h"
+#include "Materials/MaterialInterface.h"
+#include "UObject/ConstructorHelpers.h"
 
 UMolecularSurfaceComponent::UMolecularSurfaceComponent(const FObjectInitializer& ObjectInitializer)
 	: Super(ObjectInitializer)
@@ -10,11 +12,26 @@ UMolecularSurfaceComponent::UMolecularSurfaceComponent(const FObjectInitializer&
 	PrimaryComponentTick.bCanEverTick = false;
 
 	SetCollisionEnabled(ECollisionEnabled::NoCollision);
+
+	// Wie beim Band: die Farbe der Oberflaeche steckt in den Vertices, dort hat sie
+	// die Erzeugung ueber das naechstgelegene Atom hingeschrieben.
+	static ConstructorHelpers::FObjectFinder<UMaterialInterface> DefaultSurfaceMaterial(
+		TEXT("/MolecularForge/Materials/M_MF_VertexColor.M_MF_VertexColor"));
+	if (DefaultSurfaceMaterial.Succeeded())
+	{
+		SurfaceMaterial = DefaultSurfaceMaterial.Object;
+		SetMaterial(0, SurfaceMaterial);
+	}
 }
 
 void UMolecularSurfaceComponent::OnRegister()
 {
 	Super::OnRegister();
+
+	if (SurfaceMaterial)
+	{
+		SetMaterial(0, SurfaceMaterial);
+	}
 
 	if (Structure && GetNumSections() == 0)
 	{

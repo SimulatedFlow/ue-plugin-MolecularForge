@@ -8,6 +8,7 @@
 #include "MolRibbonBuilder.h"
 #include "MolecularCartoonComponent.generated.h"
 
+class UMaterialInterface;
 class UMolecularStructure;
 
 /**
@@ -66,6 +67,13 @@ public:
 	/** Radius des Rundprofils fuer Schleifen in Angstroem. */
 	UPROPERTY(EditAnywhere, BlueprintReadWrite, Category = "MolecularForge", meta = (ClampMin = "0.02"))
 	float CoilRadius = 0.25f;
+
+	/**
+	 * Material des Bandes. Voreingestellt ist eines, das die Farbe aus den Vertices liest —
+	 * dort hat die Erzeugung sie hingeschrieben.
+	 */
+	UPROPERTY(EditAnywhere, BlueprintReadWrite, Category = "MolecularForge")
+	TObjectPtr<UMaterialInterface> RibbonMaterial;
 
 	UFUNCTION(BlueprintCallable, Category = "MolecularForge")
 	void SetStructure(UMolecularStructure* InStructure);

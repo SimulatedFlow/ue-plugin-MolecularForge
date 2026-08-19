@@ -7,6 +7,7 @@
 #include "MolecularForgeTypes.h"
 #include "MolecularBondsComponent.generated.h"
 
+class UMaterialInterface;
 class UMolecularStructure;
 
 /** Woraus eine einzelne Stabinstanz entsteht. Nur fuer das schnelle Aktualisieren. */
@@ -71,6 +72,10 @@ public:
 	 */
 	UPROPERTY(EditAnywhere, BlueprintReadWrite, Category = "MolecularForge")
 	bool bSplitByAtomColor = true;
+
+	/** Material der Staebe. Siehe die gleichnamige Eigenschaft an der Kugelkomponente. */
+	UPROPERTY(EditAnywhere, BlueprintReadWrite, Category = "MolecularForge")
+	TObjectPtr<UMaterialInterface> BondMaterial;
 
 	UPROPERTY(EditAnywhere, BlueprintReadWrite, Category = "MolecularForge")
 	bool bShowWater = false;

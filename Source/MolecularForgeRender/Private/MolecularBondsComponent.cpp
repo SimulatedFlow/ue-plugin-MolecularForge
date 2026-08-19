@@ -28,11 +28,27 @@ UMolecularBondsComponent::UMolecularBondsComponent()
 	{
 		SetStaticMesh(CylinderMesh.Object);
 	}
+
+	// Dasselbe Material wie bei den Kugeln: auch die Staebe tragen ihre Farbe als
+	// Per-Instance-Daten, und beide Haelften einer Bindung sollen genau so aussehen
+	// wie die Atome, an denen sie haengen.
+	static ConstructorHelpers::FObjectFinder<UMaterialInterface> DefaultBondMaterial(
+		TEXT("/MolecularForge/Materials/M_MF_Atoms.M_MF_Atoms"));
+	if (DefaultBondMaterial.Succeeded())
+	{
+		BondMaterial = DefaultBondMaterial.Object;
+		SetMaterial(0, BondMaterial);
+	}
 }
 
 void UMolecularBondsComponent::OnRegister()
 {
 	Super::OnRegister();
+
+	if (BondMaterial)
+	{
+		SetMaterial(0, BondMaterial);
+	}
 
 	if (Structure && GetInstanceCount() == 0)
 	{
@@ -149,7 +165,9 @@ void UMolecularBondsComponent::RebuildInstances()
 		SetCustomDataValue(Instance, 0, Color.R, /*bMarkRenderStateDirty=*/false);
 		SetCustomDataValue(Instance, 1, Color.G, false);
 		SetCustomDataValue(Instance, 2, Color.B, false);
-		SetCustomDataValue(Instance, 3, BondRadiusAngstrom, false);
+		// In Unreal-Einheiten, wie bei den Kugeln — die Materialien teilen sich die
+		// Belegung der Per-Instance-Daten.
+		SetCustomDataValue(Instance, 3, BondRadiusAngstrom * UnitsPerAngstrom, false);
 	}
 
 	MarkRenderStateDirty();

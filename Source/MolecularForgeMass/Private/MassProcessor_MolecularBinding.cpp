@@ -9,6 +9,9 @@
 #include "MassExecutionContext.h"
 
 UMassProcessor_MolecularBinding::UMassProcessor_MolecularBinding()
+	// Beide Abfragen an den Prozessor binden — siehe Anmerkung im Bewegungsprozessor.
+	: SnapshotQuery(*this)
+	, BindingQuery(*this)
 {
 	bAutoRegisterWithProcessingPhases = true;
 	ExecutionFlags = static_cast<int32>(EProcessorExecutionFlags::AllNetModes);

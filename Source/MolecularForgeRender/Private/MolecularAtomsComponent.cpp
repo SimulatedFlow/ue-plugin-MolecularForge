@@ -11,7 +11,7 @@ namespace
 	/** Radius des Engine-Standardkugelmeshes in Unreal-Einheiten. */
 	constexpr float GEngineSphereRadius = 50.f;
 
-	/** Custom-Data-Slots: 0..2 Farbe, 3 Radius in Angstroem. */
+	/** Custom-Data-Slots: 0..2 Farbe, 3 Radius in Unreal-Einheiten. */
 	constexpr int32 GNumCustomDataFloats = 4;
 }
 
@@ -25,16 +25,79 @@ UMolecularAtomsComponent::UMolecularAtomsComponent()
 	SetGenerateOverlapEvents(false);
 	NumCustomDataFloats = GNumCustomDataFloats;
 
-	static ConstructorHelpers::FObjectFinder<UStaticMesh> SphereMesh(TEXT("/Engine/BasicShapes/Sphere.Sphere"));
-	if (SphereMesh.Succeeded())
+	static ConstructorHelpers::FObjectFinder<UStaticMesh> FoundSphere(
+		TEXT("/Engine/BasicShapes/Sphere.Sphere"));
+	if (FoundSphere.Succeeded())
 	{
-		SetStaticMesh(SphereMesh.Object);
+		SphereMesh = FoundSphere.Object;
 	}
+
+	static ConstructorHelpers::FObjectFinder<UStaticMesh> FoundQuad(
+		TEXT("/Engine/BasicShapes/Plane.Plane"));
+	if (FoundQuad.Succeeded())
+	{
+		QuadMesh = FoundQuad.Object;
+	}
+
+	// Das Standardmaterial der Engine ignoriert die Per-Instance-Daten — die Kugeln
+	// waeren dann alle gleich grau, obwohl die Farben laengst danebenliegen. Diese
+	// Materialien lesen sie aus.
+	static ConstructorHelpers::FObjectFinder<UMaterialInterface> DefaultAtomMaterial(
+		TEXT("/MolecularForge/Materials/M_MF_Atoms.M_MF_Atoms"));
+	if (DefaultAtomMaterial.Succeeded())
+	{
+		AtomMaterial = DefaultAtomMaterial.Object;
+	}
+
+	static ConstructorHelpers::FObjectFinder<UMaterialInterface> DefaultImpostorMaterial(
+		TEXT("/MolecularForge/Materials/M_MF_AtomImpostor.M_MF_AtomImpostor"));
+	if (DefaultImpostorMaterial.Succeeded())
+	{
+		ImpostorMaterial = DefaultImpostorMaterial.Object;
+	}
+
+	ApplyImpostorSettings();
+}
+
+void UMolecularAtomsComponent::ApplyImpostorSettings()
+{
+	UStaticMesh* WantedMesh = bUseImpostorSpheres ? QuadMesh.Get() : SphereMesh.Get();
+	UMaterialInterface* WantedMaterial = bUseImpostorSpheres
+		? ImpostorMaterial.Get()
+		: AtomMaterial.Get();
+
+	// Fehlt das Impostor-Material — etwa weil das Plugin ohne seinen Inhalt kopiert
+	// wurde —, wird auf die echten Kugeln zurueckgefallen statt gar nichts zu zeigen.
+	if (bUseImpostorSpheres && (!WantedMesh || !WantedMaterial))
+	{
+		WantedMesh = SphereMesh.Get();
+		WantedMaterial = AtomMaterial.Get();
+	}
+
+	// Das Mesh nur wechseln, wenn es sich wirklich aendert: SetStaticMesh wirft die
+	// Instanzen weg, und die kosten bei einem grossen Molekuel spuerbar Aufbauzeit.
+	if (WantedMesh && GetStaticMesh() != WantedMesh)
+	{
+		SetStaticMesh(WantedMesh);
+	}
+
+	if (WantedMaterial)
+	{
+		SetMaterial(0, WantedMaterial);
+	}
+
+	// Das Viereck wird im Shader zur Kamera gedreht und dabei bis zu einen Radius nach
+	// vorn geschoben. Seine gespeicherte Huelle ist eine flache Scheibe und deckt das
+	// nicht ab — ohne den Zuschlag verschwinden Atome am Bildrand.
+	BoundsScale = bUseImpostorSpheres ? 3.0f : 1.0f;
 }
 
 void UMolecularAtomsComponent::OnRegister()
 {
 	Super::OnRegister();
+
+	// Siehe Anmerkung an AtomMaterial: hier und nicht nur im Konstruktor.
+	ApplyImpostorSettings();
 
 	if (Structure && GetInstanceCount() == 0)
 	{
@@ -149,7 +212,9 @@ void UMolecularAtomsComponent::RebuildInstances()
 			FVector(ScaleFactor));
 
 		Colors.Add(Structure->GetAtomColor(i, ColorScheme, UniformColor));
-		Radii.Add(RadiusAngstrom);
+		// Bewusst in Unreal-Einheiten und nicht in Angstroem: das Impostor-Material
+		// rechnet in Weltkoordinaten und kennt den Massstab nicht.
+		Radii.Add(RadiusAngstrom * UnitsPerAngstrom);
 		InstanceAtomIndices.Add(i);
 	}
 
@@ -239,6 +304,18 @@ void UMolecularAtomsComponent::PostEditChangeProperty(FPropertyChangedEvent& Pro
 	};
 
 	const FName Changed = PropertyChangedEvent.GetPropertyName();
+
+	// Der Wechsel zwischen Impostoren und echten Kugeln tauscht Mesh und Material und
+	// muss deshalb vor dem Neuaufbau geschehen.
+	if (Changed == GET_MEMBER_NAME_CHECKED(UMolecularAtomsComponent, bUseImpostorSpheres)
+		|| Changed == GET_MEMBER_NAME_CHECKED(UMolecularAtomsComponent, ImpostorMaterial)
+		|| Changed == GET_MEMBER_NAME_CHECKED(UMolecularAtomsComponent, AtomMaterial))
+	{
+		ApplyImpostorSettings();
+		RebuildInstances();
+		return;
+	}
+
 	if (RebuildTriggers.Contains(Changed))
 	{
 		RebuildInstances();

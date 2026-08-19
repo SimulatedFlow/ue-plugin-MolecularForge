@@ -7,6 +7,7 @@
 #include "MolecularForgeTypes.h"
 #include "MolecularSurfaceComponent.generated.h"
 
+class UMaterialInterface;
 class UMolecularStructure;
 
 /**
@@ -56,6 +57,10 @@ public:
 	/** Muss negativ sein. Betragsgroesser heisst kantiger, betragskleiner weicher verschmolzen. */
 	UPROPERTY(EditAnywhere, BlueprintReadWrite, Category = "MolecularForge", meta = (UIMin = "-6.0", UIMax = "-0.5"))
 	float Blobbiness = -2.3f;
+
+	/** Material der Oberflaeche. Siehe die entsprechende Eigenschaft am Cartoon-Band. */
+	UPROPERTY(EditAnywhere, BlueprintReadWrite, Category = "MolecularForge")
+	TObjectPtr<UMaterialInterface> SurfaceMaterial;
 
 	UPROPERTY(EditAnywhere, BlueprintReadWrite, Category = "MolecularForge")
 	bool bShowWater = false;

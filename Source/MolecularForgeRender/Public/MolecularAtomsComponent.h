@@ -7,6 +7,7 @@
 #include "MolecularForgeTypes.h"
 #include "MolecularAtomsComponent.generated.h"
 
+class UMaterialInterface;
 class UMolecularStructure;
 
 /**
@@ -62,6 +63,38 @@ public:
 	UPROPERTY(EditAnywhere, BlueprintReadWrite, Category = "MolecularForge", meta = (ClampMin = "0.01"))
 	float UnitsPerAngstrom = 10.f;
 
+	/**
+	 * Material der Kugeln.
+	 *
+	 * Voreingestellt ist eines, das die Farbe aus den Per-Instance-Daten liest — ohne das
+	 * waeren alle Atome gleich grau, obwohl die Farben danebenliegen. Es wird bei jedem
+	 * Registrieren neu gesetzt: eine Zuweisung im Konstruktor allein ueberlebt das
+	 * Speichern eines Levels nicht zuverlaessig, und dann rendert die Engine
+	 * stillschweigend das Material der Grundform.
+	 *
+	 * Wer eigene Optik will, traegt hier einfach ein anderes ein.
+	 */
+	UPROPERTY(EditAnywhere, BlueprintReadWrite, Category = "MolecularForge")
+	TObjectPtr<UMaterialInterface> AtomMaterial;
+
+	/**
+	 * Kugeln als Impostoren zeichnen statt als Geometrie.
+	 *
+	 * Ein Impostor ist ein Viereck, in dem der Pixelshader die Kugel ausrechnet. Aus 382
+	 * Dreiecken je Atom werden zwei — bei 150.000 Atomen der Unterschied zwischen 57
+	 * Millionen Dreiecken und 300.000. Die Silhouette wird dabei nicht schlechter,
+	 * sondern besser: sie ist analytisch exakt statt facettiert.
+	 *
+	 * Ausschalten lohnt eigentlich nur, wenn ein Effekt echte Geometrie braucht — etwa
+	 * ein Renderpfad, der mit Tiefenversatz nicht umgehen kann.
+	 */
+	UPROPERTY(EditAnywhere, BlueprintReadWrite, Category = "MolecularForge")
+	bool bUseImpostorSpheres = true;
+
+	/** Material der Impostor-Darstellung. */
+	UPROPERTY(EditAnywhere, BlueprintReadWrite, Category = "MolecularForge", meta = (AdvancedDisplay))
+	TObjectPtr<UMaterialInterface> ImpostorMaterial;
+
 	/** Wassermolekuele mitzeichnen, sofern sie ueberhaupt geladen wurden. */
 	UPROPERTY(EditAnywhere, BlueprintReadWrite, Category = "MolecularForge")
 	bool bShowWater = false;
@@ -108,6 +141,9 @@ protected:
 	virtual void OnRegister() override;
 
 private:
+	/** Setzt Mesh und Material passend zur gewaehlten Darstellungsweise. */
+	void ApplyImpostorSettings();
+
 	/** Entscheidet anhand von Flags und Filtern, ob ein Atom gezeichnet wird. */
 	bool ShouldDrawAtom(int32 AtomIndex) const;
 
@@ -120,4 +156,12 @@ private:
 	/** Welches Atom hinter welcher Instanz steckt. Nur fuer das schnelle Aktualisieren. */
 	UPROPERTY(Transient)
 	TArray<int32> InstanceAtomIndices;
+
+	/** Das Kugelmesh fuer die Darstellung ohne Impostoren. */
+	UPROPERTY()
+	TObjectPtr<UStaticMesh> SphereMesh;
+
+	/** Das Viereck, auf dem die Impostoren gezeichnet werden. */
+	UPROPERTY()
+	TObjectPtr<UStaticMesh> QuadMesh;
 };

@@ -12,14 +12,19 @@ Kern in einem Satz: *PDB-/mmCIF-Datei oder UniProt-ID rein → performantes, ani
 
 *Letzte Aktualisierung: 2026-08-19.*
 
-**Alles, was ohne Editor-GUI machbar war, ist fertig.** Phasen 1 bis 4 stehen, soweit sie
-aus Code bestehen. Alle **fünf** Module bauen sauber gegen UE 5.8; **dreiundfünfzig**
-Automationstests laufen grün.
+**Phasen 1 bis 4 stehen** (Code), **Phase 5 läuft** (Editor). Alle fünf Module bauen sauber
+gegen UE 5.8; **53** Automationstests grün, dazu die Prüfung gegen echte Archivdaten.
 
-Was jetzt noch fehlt, braucht ausnahmslos den geöffneten Editor: das Impostor-Material,
-die Beispiel-Level, Screenshots, Video und das Fab-Paket. Der nächste Schritt ist deshalb
-keine Programmierarbeit, sondern der erste Blick auf das Bild — die Darstellung wurde bis
-heute kein einziges Mal gerendert.
+**Das Bild steht, und es ist farbig.** GFP rendert im Schaulevel mit 1771 Atomen in
+CPK-Farben — roter Sauerstoff, blauer Stickstoff, grauer Kohlenstoff. Damit ist die Kette
+von der Elementtabelle über die Per-Instance-Daten bis ins Material nachweislich dicht.
+
+Offen am Material ist der zweite Teil: **Impostor-Kugeln**. Zurzeit hängt an jedem Atom
+das Engine-Kugelmesh mit 382 Dreiecken — bei 150.000 Atomen wären das 57 Millionen. Mit
+Impostoren sind es zwei je Atom.
+
+**Kleinigkeit für später:** das Hauptlicht im Schaulevel ist mit Stärke 6 etwas zu hart,
+die hellen Atome laufen aus. Beim Aufräumen des Levels auf etwa 3,5 senken.
 
 Damit gibt es fünf Darstellungen: Space-Filling, Ball-and-Stick, Rückgrat, Cartoon und
 Oberfläche, alle über `AMolecularStructureActor` umschaltbar.
@@ -40,17 +45,64 @@ Bauen und Testen ohne Editor-GUI:
 ```
 Vorher prüfen, ob `UnrealEditor.exe` läuft — der Testlauf sperrt sonst gegen die offene Sitzung.
 
-**Als Nächstes, sobald der Editor zur Verfügung steht** — in dieser Reihenfolge:
+### Phase 5 — Editorarbeit (läuft)
 
-1. **Erstes Bild.** `AMolecularStructureActor` ins Level, eine PDB-Datei laden, alle fünf
-   Darstellungen durchschalten. Das ist die einzige noch offene Frage aus Phase 1.
-2. **Impostor-Material** (Pixel Depth Offset) statt Engine-Kugel — der Performance-Sprung,
-   der 150.000 Atome erst möglich macht. Die Komponente liefert Farbe und Radius schon
-   als Per-Instance Custom Data, das Material muss nur andocken.
-3. **Echten Abruf einmal von Hand probieren** (RCSB und AlphaFold) — automatisiert ist er
-   bewusst nicht getestet, siehe offene Punkte.
-4. **Demo-Struktur mitliefern** und damit die Testlücke bei der Faltblatt-Erkennung schließen.
-5. Beispiel-Level, Screenshots, Video, Fab-Paket.
+Silvan hat den Editor freigegeben. Reihenfolge ist bindend.
+
+- [x] **Echte Strukturdaten geprüft.** 1CRN, 1EMA und 4HHB aus dem RCSB liegen unter
+      `Demo/`. `Tools/verify_real_structures.py` lädt sie und prüft: PDB und mmCIF liefern
+      identische Ergebnisse, GFP wird als faltblattreich erkannt, Hämoglobin als reine
+      Helix, der Eisen-Histidin-Abstand im Häm misst 1,98 Å. **Damit ist die Testlücke bei
+      der Faltblatt-Erkennung geschlossen.**
+- [x] **Erstes Bild.** `Tools/build_showcase_level.py` baut das Schaulevel
+      (`/MolecularForge/Maps/L_MF_Showcase`), Kameraabstand aus der Strukturausdehnung
+      gerechnet. GFP rendert mit 1771 Atomen.
+- [x] **Material, erster Teil: CPK-Farben.** `Tools/build_materials.py` baut `M_MF_Atoms`
+      (Farbe aus Per-Instance-Daten, für Kugeln und Stäbe) und `M_MF_VertexColor`
+      (Farbe aus Vertices, für Band und Oberfläche). Beide sind als Eigenschaft an den
+      Komponenten hinterlegt und werden beim Registrieren gesetzt. Nachgewiesen: roter
+      Sauerstoff, blauer Stickstoff, grauer Kohlenstoff im Bild.
+- [ ] **Material, zweiter Teil: Impostor-Kugeln** über Pixel Depth Offset statt
+      Engine-Kugelmesh. Das ist der Performance-Sprung — 382 Dreiecke je Atom gegen 2.
+      **Als Nächstes.**
+- [ ] Alle fünf Darstellungen durchschalten und je ein Bild ablegen
+- [ ] Echten Abruf von Hand probieren (RCSB und AlphaFold)
+- [ ] Mesoskala-Demo: Molekülpopulation mit Diffusion und Bindung
+- [ ] Beispiel-Level aufräumen, Screenshots, Video
+- [ ] Fab-Paket (TRC-konform), README, Attributionstext
+
+**Wie gebaut und geprüft wird** (Befehle in `Tools/`):
+```powershell
+# Level bauen (headless)
+UnrealEditor-Cmd.exe <uproject> -run=pythonscript -script="<Tools>\build_showcase_level.py" -unattended
+
+# Bild aufnehmen (braucht Renderer, also nicht -nullrhi)
+UnrealEditor.exe <uproject> /MolecularForge/Maps/L_MF_Showcase -game -windowed `
+  -resx=1600 -resy=900 -nosplash -nosound -unattended -ExecCmds="HighResShot 1600x900"
+# Ergebnis: Saved/Screenshots/WindowsEditor/
+```
+
+**Vier Fallen, die Zeit gekostet haben und wiederkommen werden:**
+
+*Materialien brauchen das Nutzungskennzeichen.* Ohne `used_with_instanced_static_meshes`
+verweigert die Engine das Material auf instanzierten Meshes und nimmt stillschweigend das
+graue Standardmaterial. Der Hinweis steht nur im Log, im Bild sieht man bloß farblose Kugeln.
+
+*Materialzuweisung im Komponentenkonstruktor überlebt das Speichern eines Levels nicht.*
+Die Materialliste nennt danach zwar das richtige Material, gerendert wird trotzdem das der
+Grundform. Richtig ist: das Material als `UPROPERTY` halten und in `OnRegister` setzen.
+Gefunden wurde das mit einer Entweder-oder-Probe — Material auf knallrot, Bild ansehen.
+Blieb es weiß, wurde das Material nicht benutzt; das war schneller als jede Vermutung.
+
+*Level speichern im Kommandozeilenbetrieb.* `new_level(Zielpfad)` legt zwar eine leere
+Karte am Ziel an, lässt den Editor danach aber auf einer namenlosen Welt (`/Temp/Untitled`)
+stehen. Alle Speicherwege melden dann brav Erfolg oder Misserfolg und schreiben ins Leere.
+Richtig ist: in die vorhandene Welt bauen und mit `save_map(world, Paketpfad)` wegschreiben.
+Und: den Rückgabewert nicht glauben, sondern die Dateigröße vergleichen.
+
+*Mass-Abfragen müssen im Konstruktor an den Prozessor gebunden werden* (`: MotionQuery(*this)`).
+Ohne das läuft `ConfigureQueries` in eine Zusicherung — und zwar erst beim Weltstart, nicht
+beim Übersetzen. Der Editor stürzt dann kommentarlos ab.
 
 ### Offene Punkte
 
