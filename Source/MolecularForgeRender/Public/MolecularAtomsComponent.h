@@ -145,6 +145,12 @@ private:
 	/** Setzt Mesh und Material passend zur gewaehlten Darstellungsweise. */
 	void ApplyImpostorSettings();
 
+	/**
+	 * Liefert das Impostor-Material, laedt es aber erst beim ersten Bedarf und meldet
+	 * nichts, wenn es fehlt. Es gehoert nicht zum Lieferumfang.
+	 */
+	UMaterialInterface* ResolveImpostorMaterial();
+
 	/** Entscheidet anhand von Flags und Filtern, ob ein Atom gezeichnet wird. */
 	bool ShouldDrawAtom(int32 AtomIndex) const;
 

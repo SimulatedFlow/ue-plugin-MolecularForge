@@ -165,7 +165,7 @@ UMaterialInterface* AMolecularMesoRenderer::ResolveInstanceMaterial() const
 	if (!Material)
 	{
 		Material = LoadObject<UMaterialInterface>(nullptr,
-			TEXT("/MolecularForge/Materials/M_MF_Atoms.M_MF_Atoms"));
+			TEXT("/MolecularForge/MolecularForge/Materials/M_MF_Atoms.M_MF_Atoms"));
 	}
 
 	if (!Material)
@@ -423,21 +423,5 @@ void AMolecularMesoRenderer::Tick(float DeltaSeconds)
 			TEXT("Mesoskala-Darstellung: %d nah, %d mittel, %d fern, %d ausgeblendet."),
 			FullDetail.Num(), BackboneDetail.Num(), BlobDetail.Num(), LastHiddenCount);
 
-		// Welches Material wirklich an den Instanzen haengt und ob Farbwerte ankommen.
-		// Beides einmal auszugeben ist billiger als ein weiterer Ratedurchgang: bleibt
-		// hier "BasicShapeMaterial" stehen, hat die Engine still ersetzt.
-		if (const UMaterialInterface* Applied = BlobInstances ? BlobInstances->GetMaterial(0) : nullptr)
-		{
-			UE_LOG(LogMolecularForge, Log,
-				TEXT("Mesoskala-Material: %s, %d Instanzwerte, Puffer %d fuer %d Instanzen, ")
-				TEXT("erste Farbe im Puffer %.2f/%.2f/%.2f."),
-				*Applied->GetName(),
-				BlobInstances->NumCustomDataFloats,
-				BlobInstances->PerInstanceSMCustomData.Num(),
-				BlobInstances->GetInstanceCount(),
-				BlobInstances->PerInstanceSMCustomData.Num() > 2 ? BlobInstances->PerInstanceSMCustomData[0] : -1.f,
-				BlobInstances->PerInstanceSMCustomData.Num() > 2 ? BlobInstances->PerInstanceSMCustomData[1] : -1.f,
-				BlobInstances->PerInstanceSMCustomData.Num() > 2 ? BlobInstances->PerInstanceSMCustomData[2] : -1.f);
-		}
 	}
 }

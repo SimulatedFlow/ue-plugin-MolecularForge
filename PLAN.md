@@ -12,8 +12,21 @@ Kern in einem Satz: *PDB-/mmCIF-Datei oder UniProt-ID rein → performantes, ani
 
 *Letzte Aktualisierung: 2026-08-19.*
 
-**Phasen 1 bis 4 stehen** (Code), **Phase 5 läuft** (Editor). Alle fünf Module bauen sauber
-gegen UE 5.8; **53** Automationstests grün, dazu die Prüfung gegen echte Archivdaten.
+**Alle fünf Phasen sind abgeschlossen.** Alle fünf Module bauen sauber gegen UE 5.8;
+**53** Automationstests grün, dazu die Prüfung gegen echte Archivdaten und drei
+Netzabruf-Tests gegen die echten Server.
+
+**Das Fab-Paket liegt fertig in `Desktop\Fab-Upload-MolecularForge\`** — Archiv, Listing-
+text, Attributionstext und das Bild-/Videomaterial. Hochgeladen ist nichts; der Absende-
+knopf gehört Silvan.
+
+**Zwei Festlegungen darin, die er ändern kann, wenn er anders entscheidet:**
+- Die Fassung steht auf `VersionName 1.0.0` und `IsBetaVersion: false`, wie bei den
+  bereits angenommenen Plugins. Vorher stand dort 0.1 und Beta.
+- Das Impostor-Material `M_MF_AtomImpostor` geht **nicht** mit ins Paket. Es lässt sich
+  nicht übersetzen und würde beim Käufer nur eine Fehlerzeile erzeugen; die Impostoren
+  sind ohnehin abgeschaltet. Im Quellbestand bleibt es liegen, damit die angefangene
+  Arbeit nicht verloren ist, und wird jetzt erst bei Bedarf und lautlos geladen.
 
 **Das Bild steht, und es ist farbig.** GFP rendert im Schaulevel mit 1771 Atomen in
 CPK-Farben — roter Sauerstoff, blauer Stickstoff, grauer Kohlenstoff. Damit ist die Kette
@@ -37,16 +50,25 @@ diffundieren, binden und werden gestaffelt gezeichnet — im Bild belegt, die Au
 zusätzlich im Log (`0 nah, 329 mittel, 451 fern`). Damit ist Phase 4 nicht mehr nur
 einheitengetestet, sondern einmal wirklich gelaufen.
 
-**Offen daran: die Moleküle sind einfarbig.** Die Arten unterscheiden sich im Bild nur
-durch ihre Größe. Die Ursache ist eingegrenzt, aber nicht behoben — ausführlich unter
-„Offene Punkte", weil dort eine Entscheidung von Silvan drinsteckt.
+**Die Mesoskala-Moleküle sind farbig** — blaue Proteine, orange Liganden, und im Bild sitzen
+die kleinen sichtbar an den großen. Sie wirkten lange grau; die Ursache lag nicht im Plugin,
+sondern in der Aufnahme. Siehe die Falle zu `HighResShot` weiter unten.
 
-**Kleinigkeiten für das Aufräumen der Level:**
-- Hauptlicht im *Schaulevel* steht noch auf Stärke 6 und läuft aus; im Vergleichslevel
-  sind es bereits 3,5. Angleichen.
-- Die Gauß-Oberfläche wirkt bei Blobbiness −2,3 recht knubbelig — jedes Atom zeichnet
-  sich einzeln ab. Für Schaubilder wäre ein weicherer Wert (etwa −1,5) gefälliger; die
-  Voreinstellung sollte trotzdem beim physikalisch üblichen Wert bleiben.
+**Die drei Beispiel-Level sind aufgeräumt.** Alle haben jetzt dieselbe festgenagelte
+Belichtung (`Tools/mf_szene.py`), das Schaulevel dieselbe Lichtstärke wie das
+Vergleichslevel, und im Vergleichsbild sind zum ersten Mal alle fünf Darstellungen
+vollständig im Bild — vorher liefen die äußeren beiden hinaus.
+
+**Bilder und Video liegen unter `Docs/`:**
+- `Bilder/01_Darstellungsarten.png` — alle fünf Darstellungen nebeneinander (1CRN)
+- `Bilder/02_GFP_SpaceFilling.png` — GFP, 1771 Atome in CPK-Farben
+- `Bilder/03_Mesoskala.png` — Population aus 780 Molekülen
+- `Video/MolecularForge_Mesoskala.mp4` — 1920×1080, 30 Bilder/s, 5,3 s Diffusion und Bindung
+
+**Kleinigkeit, die noch offen ist:** Die Gauß-Oberfläche wirkt bei Blobbiness −2,3 recht
+knubbelig — jedes Atom zeichnet sich einzeln ab. Für Schaubilder wäre ein weicherer Wert
+(etwa −1,5) gefälliger; die Voreinstellung sollte trotzdem beim physikalisch üblichen Wert
+bleiben.
 
 Damit gibt es fünf Darstellungen: Space-Filling, Ball-and-Stick, Rückgrat, Cartoon und
 Oberfläche, alle über `AMolecularStructureActor` umschaltbar.
@@ -106,9 +128,21 @@ Silvan hat den Editor freigegeben. Reihenfolge ist bindend.
         als pLDDT erkannt, Attribution gesetzt ✅
       - Zweiter Abruf kommt aus dem Zwischenspeicher ✅
 - [x] Mesoskala-Demo: Molekülpopulation mit Diffusion und Bindung
-      (`L_MF_Mesoscale`, gebaut von `Tools/build_mesoscale_level.py`; Färbung offen)
-- [ ] Beispiel-Level aufräumen, Screenshots, Video
-- [ ] Fab-Paket (TRC-konform), README, Attributionstext
+      (`L_MF_Mesoscale`, gebaut von `Tools/build_mesoscale_level.py`)
+      780 Moleküle in zwei Arten, farbig getrennt, Staffelung im Log belegt
+      (`0 nah, 329 mittel, 451 fern`).
+- [x] **Beispiel-Level aufgeräumt, Screenshots, Video.** Belichtung in allen drei Levels
+      festgenagelt und als gemeinsamer Baustein in `Tools/mf_szene.py`; Lichtstärke im
+      Schaulevel an das Vergleichslevel angeglichen; Bildausschnitt des Vergleichslevels
+      korrigiert, sodass alle fünf Darstellungen vollständig im Bild stehen. Drei Bilder
+      unter `Docs/Bilder/`, ein Video unter `Docs/Video/`.
+- [x] **Fab-Paket (TRC-konform), README, Attributionstext.** Inhalt in den Einpackordner
+      `Content/MolecularForge/` verschoben (mit Referenzkorrektur, nicht im Dateisystem),
+      `Config/FilterPlugin.ini` und `Resources/Icon128.png` angelegt, `.uplugin` auf den
+      Hausstil der bereits angenommenen Plugins gebracht, `README.md`, `DESCRIPTION.md`
+      und `ATTRIBUTION.md` geschrieben. Gepackt und geprüft von
+      `Tools/build_fab_package.py`; Ergebnis liegt in
+      `Desktop\Fab-Upload-MolecularForge\`.
 
 **Wie gebaut und geprüft wird** (Befehle in `Tools/`):
 ```powershell
@@ -157,6 +191,45 @@ unbegrenztes Post-Process-Volumen mit `auto_exposure_min_brightness == max_brigh
 die Helligkeit stellt man danach über `auto_exposure_bias` ein, nicht über die Lampen.
 **Die anderen Level haben dieses Volumen noch nicht** — beim Aufräumen nachziehen.
 
+*`HighResShot` verliert Instanzdaten, die erst zur Laufzeit gesetzt wurden.* Das ist die
+teuerste Falle dieses Projekts gewesen — sie hat einen halben Abend Fehlersuche an einer
+Stelle gekostet, an der nichts kaputt war. Die Mesoskala-Moleküle waren auf jedem
+`HighResShot` grau. Nachweislich stimmte dabei alles: Material hing an der Komponente,
+trug das Nutzungskennzeichen, übersetzte fehlerfrei, der Instanzpuffer hatte die richtige
+Größe und enthielt die richtigen Farben. Ausgeschlossen wurden nacheinander das Material
+selbst (auch ein reines Rot und das Engine-Gittermaterial blieben grau), die
+Komponentenklasse, Konstruktor-Unterobjekt gegen Laufzeiterzeugung, Material vor gegen nach
+dem Registrieren, einmaliger gegen bildweiser Instanzaufbau, Beweglichkeit und Schattenwurf.
+Alles ohne Wirkung, weil alles davon in Ordnung war.
+
+`HighResShot` rendert die Szene in einem eigenen Durchgang neu, und dieser Durchgang bekommt
+die zur Laufzeit geschriebenen Per-Instance-Daten nicht mit. Instanzen, die im Editor
+angelegt und mit dem Level gespeichert wurden, sind nicht betroffen — deshalb war das
+Vergleichslevel im selben Lauf farbig und die Mesoskala nicht. Genau dieser Unterschied
+hätte früher auffallen müssen.
+
+**Richtig ist: `-dumpmovie` statt `HighResShot`**, sobald Instanzen zur Laufzeit entstehen.
+```powershell
+UnrealEditor.exe <uproject> /MolecularForge/Maps/L_MF_Mesoscale -game -windowed `
+  -ResX=1920 -ResY=1080 -nosplash -nosound `
+  -dumpmovie -benchmark -deterministic -fps=30 -benchmarkseconds=16
+# schreibt MovieFrame%05d.png nach Saved/Screenshots/WindowsEditor/
+```
+Und die allgemeine Lehre: Wenn eine Probe ein Ergebnis liefert, das *unmöglich* sein kann —
+ein rein rotes Material rendert grau —, dann ist die Annahme über das Messwerkzeug falsch
+und nicht die über den Prüfling. Ab da hätte ich das Aufnahmeverfahren wechseln müssen,
+statt weiter am Renderer zu drehen.
+
+*Der Verzeichnisdienst ist im Kommandozeilenbetrieb noch nicht durch.* `list_assets` auf ein
+Verzeichnis voller Assets liefert dann eine leere Liste, und ein Skript meldet zufrieden
+„0 verschoben", obwohl drei Dateien dort liegen. Vorher
+`AssetRegistryHelpers.get_asset_registry().scan_paths_synchronous([...], force_rescan=True)`.
+
+*`-script=` verträgt kein `\r` im Pfad.* Ein Skript namens `restructure_content.py` unter
+`...\Tools\` wird zu `...\Tools` abgeschnitten, weil die Zeichenfolge `\r` unterwegs als
+Wagenrücklauf gelesen wird. Die Meldung lautet dann „Could not load Python file" mit einem
+Pfad, der auf den Ordner zeigt. Abhilfe: den Pfad mit Schrägstrichen übergeben.
+
 *Kameraabstand wird an der Hülle gemessen, nicht am Mittelpunkt.* Der erste Anlauf rechnete
 den Abstand aus der Kantenlänge und stellte die Kamera damit bei 1895 Einheiten in einen
 Raum, der bis 1800 reicht. Richtig ist die Umkugel: `Abstand = Radius / sin(halber
@@ -164,34 +237,6 @@ Bildwinkel)`, und zwar mit dem *senkrechten* Bildwinkel, denn der ist der kleine
 
 ### Offene Punkte
 
-**Die Mesoskala-Moleküle bleiben einfarbig — ungelöst.** Das ist der teuerste offene Punkt
-und der einzige, bei dem ich nicht weiterweiß.
-
-Was nachweislich stimmt: das Material hängt an der Komponente (`GetMaterial(0)` meldet es),
-es trägt das Nutzungskennzeichen für instanzierte Meshes, es übersetzt fehlerfrei, der
-Instanzpuffer hat die richtige Größe (1804 Werte für 451 Instanzen), und die Farbwerte
-stehen darin (0,25/0,62/0,95). Dasselbe Material rendert im Vergleichslevel im selben
-`-game`-Lauf voll farbig.
-
-Was ausgeschlossen ist — jeweils einzeln gebaut und angesehen:
-- Material selbst falsch → auch ein reines Rot und das Engine-Gittermaterial blieben grau
-- Komponentenklasse → die bewährte `UMolecularAtomsComponent` bleibt hier ebenfalls grau
-- Konstruktor-Unterobjekt gegen Laufzeiterzeugung → beides grau
-- Material vor oder nach dem Registrieren gesetzt → beides grau
-- Instanzen einmal aufgebaut gegen jedes Bild neu aufgebaut → beides grau
-- Beweglichkeit, Schattenwurf, `SetNumCustomDataFloats`-Setter, `AddInstanceComponent` →
-  alles auf den Stand des funktionierenden Fremdplugins gebracht, ohne Wirkung
-
-Der Unterschied zum funktionierenden Fall bleibt: dort werden Instanzen **im Editor**
-angelegt und mit dem Level gespeichert, hier entstehen sie zur Laufzeit.
-
-**Entscheidung für Silvan:** Die Demo ist auch einfarbig aussagekräftig — die zwei Arten
-sind an der Größe zu unterscheiden, Diffusion, Bindung und Staffelung laufen. Entweder das
-bleibt so und der Punkt kommt auf die Liste für später, oder ich baue die Färbung auf einen
-Weg um, der ohne Per-Instance-Daten auskommt: je Art eine eigene Instanzkomponente mit
-einem eigenen Materialexemplar. Das ist ein überschaubarer Umbau, der zugleich das
-Neuschreiben der Instanzdaten in jedem Bild einspart — aber es ist ein Umbau, und ich habe
-an diesem Punkt schon viel Zeit gelassen.
 
 **Impostor-Kugeln: abgebrochen, nicht aufgegeben.** Das Material steht als
 `M_MF_AtomImpostor` und ist vollständig verdrahtet — Kreisausschnitt, Kugelnormale,

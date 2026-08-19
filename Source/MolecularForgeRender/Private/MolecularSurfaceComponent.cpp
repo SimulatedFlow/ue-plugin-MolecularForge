@@ -16,7 +16,7 @@ UMolecularSurfaceComponent::UMolecularSurfaceComponent(const FObjectInitializer&
 	// Wie beim Band: die Farbe der Oberflaeche steckt in den Vertices, dort hat sie
 	// die Erzeugung ueber das naechstgelegene Atom hingeschrieben.
 	static ConstructorHelpers::FObjectFinder<UMaterialInterface> DefaultSurfaceMaterial(
-		TEXT("/MolecularForge/Materials/M_MF_VertexColor.M_MF_VertexColor"));
+		TEXT("/MolecularForge/MolecularForge/Materials/M_MF_VertexColor.M_MF_VertexColor"));
 	if (DefaultSurfaceMaterial.Succeeded())
 	{
 		SurfaceMaterial = DefaultSurfaceMaterial.Object;

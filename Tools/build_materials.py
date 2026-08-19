@@ -13,7 +13,7 @@ import unreal
 
 LOG = unreal.log
 
-MATERIAL_DIR = "/MolecularForge/Materials"
+MATERIAL_DIR = "/MolecularForge/MolecularForge/Materials"
 
 # Fehlersuche: laesst Ausrichtung und Kreisausschnitt weg. Das Viereck bleibt dann flach
 # und liegt in der XY-Ebene, wird aber gezeichnet. Sieht man Rechtecke, stimmen Mesh,

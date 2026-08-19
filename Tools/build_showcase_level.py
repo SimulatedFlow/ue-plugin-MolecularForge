@@ -22,11 +22,11 @@ import mf_szene
 
 LOG = unreal.log
 
-MAP_PACKAGE = "/MolecularForge/Maps/L_MF_Showcase"
+MAP_PACKAGE = "/MolecularForge/MolecularForge/Maps/L_MF_Showcase"
 
 MAP_FILE = os.path.join(
     unreal.Paths.project_dir(), "Plugins", "MolecularForge",
-    "Content", "Maps", "L_MF_Showcase.umap")
+    "Content", "MolecularForge", "Maps", "L_MF_Showcase.umap")
 
 # Relativ zum Projektverzeichnis — so loest der Actor den Pfad auf.
 STRUCTURE_RELATIVE_PATH = "Plugins/MolecularForge/Demo/1EMA.pdb"

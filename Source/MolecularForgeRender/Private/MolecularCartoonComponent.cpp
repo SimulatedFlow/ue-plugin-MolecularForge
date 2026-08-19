@@ -18,7 +18,7 @@ UMolecularCartoonComponent::UMolecularCartoonComponent(const FObjectInitializer&
 	// Das Band traegt seine Farbe in den Vertices — anders als Kugeln und Staebe ist es
 	// ein einziges Mesh und kann keine Instanzdaten haben.
 	static ConstructorHelpers::FObjectFinder<UMaterialInterface> DefaultRibbonMaterial(
-		TEXT("/MolecularForge/Materials/M_MF_VertexColor.M_MF_VertexColor"));
+		TEXT("/MolecularForge/MolecularForge/Materials/M_MF_VertexColor.M_MF_VertexColor"));
 	if (DefaultRibbonMaterial.Succeeded())
 	{
 		RibbonMaterial = DefaultRibbonMaterial.Object;

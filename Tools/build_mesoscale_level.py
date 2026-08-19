@@ -22,11 +22,11 @@ import mf_szene
 
 LOG = unreal.log
 
-MAP_PACKAGE = "/MolecularForge/Maps/L_MF_Mesoscale"
+MAP_PACKAGE = "/MolecularForge/MolecularForge/Maps/L_MF_Mesoscale"
 
 MAP_FILE = os.path.join(
     unreal.Paths.project_dir(), "Plugins", "MolecularForge",
-    "Content", "Maps", "L_MF_Mesoscale.umap")
+    "Content", "MolecularForge", "Maps", "L_MF_Mesoscale.umap")
 
 # Halbe Kantenlaengen des Raums, in dem die Molekuele wimmeln.
 #

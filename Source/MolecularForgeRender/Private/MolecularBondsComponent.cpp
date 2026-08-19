@@ -33,7 +33,7 @@ UMolecularBondsComponent::UMolecularBondsComponent()
 	// Per-Instance-Daten, und beide Haelften einer Bindung sollen genau so aussehen
 	// wie die Atome, an denen sie haengen.
 	static ConstructorHelpers::FObjectFinder<UMaterialInterface> DefaultBondMaterial(
-		TEXT("/MolecularForge/Materials/M_MF_Atoms.M_MF_Atoms"));
+		TEXT("/MolecularForge/MolecularForge/Materials/M_MF_Atoms.M_MF_Atoms"));
 	if (DefaultBondMaterial.Succeeded())
 	{
 		BondMaterial = DefaultBondMaterial.Object;

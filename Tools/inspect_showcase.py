@@ -8,7 +8,7 @@ import unreal
 
 LOG = unreal.log
 
-MAP_PACKAGE = "/MolecularForge/Maps/L_MF_Showcase"
+MAP_PACKAGE = "/MolecularForge/MolecularForge/Maps/L_MF_Showcase"
 
 
 def describe_component(component, label):

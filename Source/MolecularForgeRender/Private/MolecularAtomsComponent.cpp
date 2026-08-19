@@ -43,27 +43,43 @@ UMolecularAtomsComponent::UMolecularAtomsComponent()
 	// waeren dann alle gleich grau, obwohl die Farben laengst danebenliegen. Diese
 	// Materialien lesen sie aus.
 	static ConstructorHelpers::FObjectFinder<UMaterialInterface> DefaultAtomMaterial(
-		TEXT("/MolecularForge/Materials/M_MF_Atoms.M_MF_Atoms"));
+		TEXT("/MolecularForge/MolecularForge/Materials/M_MF_Atoms.M_MF_Atoms"));
 	if (DefaultAtomMaterial.Succeeded())
 	{
 		AtomMaterial = DefaultAtomMaterial.Object;
 	}
 
-	static ConstructorHelpers::FObjectFinder<UMaterialInterface> DefaultImpostorMaterial(
-		TEXT("/MolecularForge/Materials/M_MF_AtomImpostor.M_MF_AtomImpostor"));
-	if (DefaultImpostorMaterial.Succeeded())
-	{
-		ImpostorMaterial = DefaultImpostorMaterial.Object;
-	}
+	// Das Impostor-Material wird hier bewusst *nicht* gesucht. Es ist nicht einsatzbereit
+	// und wird mit dem Plugin auch nicht ausgeliefert; ein Konstruktor-Sucher wuerde beim
+	// Anwender bei jedem Start eine Fehlerzeile schreiben, ohne dass er etwas falsch
+	// gemacht haette. Wer die Impostoren einschaltet, bekommt es beim ersten Bedarf
+	// geladen — siehe ResolveImpostorMaterial().
 
 	ApplyImpostorSettings();
+}
+
+UMaterialInterface* UMolecularAtomsComponent::ResolveImpostorMaterial()
+{
+	if (ImpostorMaterial)
+	{
+		return ImpostorMaterial.Get();
+	}
+
+	// Erst jetzt nachsehen, und ohne Laerm, wenn nichts da ist. Das Material gehoert nicht
+	// zum Lieferumfang; wer die Impostoren benutzen will, traegt ein eigenes ein.
+	UMaterialInterface* Found = LoadObject<UMaterialInterface>(nullptr,
+		TEXT("/MolecularForge/MolecularForge/Materials/M_MF_AtomImpostor.M_MF_AtomImpostor"),
+		nullptr, LOAD_NoWarn | LOAD_Quiet);
+
+	ImpostorMaterial = Found;
+	return Found;
 }
 
 void UMolecularAtomsComponent::ApplyImpostorSettings()
 {
 	UStaticMesh* WantedMesh = bUseImpostorSpheres ? QuadMesh.Get() : SphereMesh.Get();
 	UMaterialInterface* WantedMaterial = bUseImpostorSpheres
-		? ImpostorMaterial.Get()
+		? ResolveImpostorMaterial()
 		: AtomMaterial.Get();
 
 	// Fehlt das Impostor-Material — etwa weil das Plugin ohne seinen Inhalt kopiert

@@ -21,11 +21,11 @@ import mf_szene
 
 LOG = unreal.log
 
-MAP_PACKAGE = "/MolecularForge/Maps/L_MF_Comparison"
+MAP_PACKAGE = "/MolecularForge/MolecularForge/Maps/L_MF_Comparison"
 
 MAP_FILE = os.path.join(
     unreal.Paths.project_dir(), "Plugins", "MolecularForge",
-    "Content", "Maps", "L_MF_Comparison.umap")
+    "Content", "MolecularForge", "Maps", "L_MF_Comparison.umap")
 
 # Crambin: klein genug, dass auch die Oberflaeche schnell entsteht, und gross genug, dass
 # Helix und Faltblatt im Band zu erkennen sind.
@@ -34,8 +34,9 @@ STRUCTURE_RELATIVE_PATH = "Plugins/MolecularForge/Demo/1CRN.pdb"
 UNITS_PER_ANGSTROM = 10.0
 
 # Abstand der Schaustuecke voneinander. Crambin misst rund 25 Angstroem, also 250
-# Einheiten — 450 lassen Luft, ohne dass die Reihe auseinanderfaellt.
-SPACING = 450.0
+# Einheiten — 380 lassen gerade genug Luft. Enger heisst zugleich: jedes Schaustueck wird
+# im fertigen Bild groesser, und darauf kommt es bei einem Vergleichsbild an.
+SPACING = 380.0
 
 CAMERA_FOV_DEGREES = 90.0
 
@@ -129,10 +130,16 @@ def build_camera():
     row_width = SPACING * (len(REPRESENTATIONS) - 1) + 300.0
     half_fov = math.radians(CAMERA_FOV_DEGREES * 0.5)
 
-    # Der Faktor 1.75 ist gemessen, nicht gerechnet: bei einem breiten Bildformat weitet
-    # Unreal den waagerechten Bildwinkel ueber die eingestellten 90 Grad hinaus, und die
-    # Reihe stand mit der reinen Formel nur in der Bildmitte.
-    distance = (row_width * 0.5) / (math.tan(half_fov) * 1.75)
+    # Achtung, das gilt fuer 16:9 und nur dafuer: Unreal haelt den *senkrechten* Bildwinkel
+    # fest und leitet den waagerechten aus dem Seitenverhaeltnis ab. Nimmt man dasselbe
+    # Level im Breitformat auf, wird die Reihe nicht beschnitten, sondern kleiner.
+    # Nachgemessen mit 1920x640: alles rueckt zusammen.
+    #
+    # Vorher stand hier ein Faktor 1,75 im Nenner, angeblich gemessen. Er hat den Abstand
+    # aber *verkleinert* und damit die Kamera naeher herangeholt, sodass das erste und das
+    # letzte Schaustueck aus dem Bild liefen. Wer einen Erfahrungswert einbaut, muss ihn am
+    # fertigen Bild nachpruefen — genau das war damals unterblieben.
+    distance = (row_width * 0.5) / math.tan(half_fov) * 1.10
 
     location = unreal.Vector(-distance, 0.0, distance * 0.28)
     rotation = unreal.Rotator(0.0, -14.0, 0.0)
