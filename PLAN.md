@@ -32,6 +32,15 @@ Einzelheiten und der nächste konkrete Schritt stehen unter den offenen Punkten.
 zeichnet das Plugin echte Kugelgeometrie, was für einige tausend Atome flüssig läuft, aber
 nicht für hunderttausende.
 
+**Die Mesoskala-Demo läuft.** `L_MF_Mesoscale` setzt 780 Moleküle in zwei Arten, sie
+diffundieren, binden und werden gestaffelt gezeichnet — im Bild belegt, die Aufteilung
+zusätzlich im Log (`0 nah, 329 mittel, 451 fern`). Damit ist Phase 4 nicht mehr nur
+einheitengetestet, sondern einmal wirklich gelaufen.
+
+**Offen daran: die Moleküle sind einfarbig.** Die Arten unterscheiden sich im Bild nur
+durch ihre Größe. Die Ursache ist eingegrenzt, aber nicht behoben — ausführlich unter
+„Offene Punkte", weil dort eine Entscheidung von Silvan drinsteckt.
+
 **Kleinigkeiten für das Aufräumen der Level:**
 - Hauptlicht im *Schaulevel* steht noch auf Stärke 6 und läuft aus; im Vergleichslevel
   sind es bereits 3,5. Angleichen.
@@ -96,7 +105,8 @@ Silvan hat den Editor freigegeben. Reihenfolge ist bindend.
       - AlphaFold: API aufgelöst zu `.../files/AF-P69905-F1-model_v6.cif` → 1077 Atome,
         als pLDDT erkannt, Attribution gesetzt ✅
       - Zweiter Abruf kommt aus dem Zwischenspeicher ✅
-- [ ] Mesoskala-Demo: Molekülpopulation mit Diffusion und Bindung
+- [x] Mesoskala-Demo: Molekülpopulation mit Diffusion und Bindung
+      (`L_MF_Mesoscale`, gebaut von `Tools/build_mesoscale_level.py`; Färbung offen)
 - [ ] Beispiel-Level aufräumen, Screenshots, Video
 - [ ] Fab-Paket (TRC-konform), README, Attributionstext
 
@@ -111,7 +121,7 @@ UnrealEditor.exe <uproject> /MolecularForge/Maps/L_MF_Showcase -game -windowed `
 # Ergebnis: Saved/Screenshots/WindowsEditor/
 ```
 
-**Vier Fallen, die Zeit gekostet haben und wiederkommen werden:**
+**Fallen, die Zeit gekostet haben und wiederkommen werden:**
 
 *Materialien brauchen das Nutzungskennzeichen.* Ohne `used_with_instanced_static_meshes`
 verweigert die Engine das Material auf instanzierten Meshes und nimmt stillschweigend das
@@ -139,7 +149,49 @@ Und: den Rückgabewert nicht glauben, sondern die Dateigröße vergleichen.
 Ohne das läuft `ConfigureQueries` in eine Zusicherung — und zwar erst beim Weltstart, nicht
 beim Übersetzen. Der Editor stürzt dann kommentarlos ab.
 
+*Die automatische Belichtung macht jede Beleuchtungsarbeit zunichte.* In einer Szene, die
+zu neun Zehnteln schwarz ist, regelt sie auf, bis das Motiv ausbrennt — und gleicht jede
+Absenkung der Lichtstärke wieder aus. Im Mesoskala-Bild sahen die Moleküle deshalb weiß
+aus, obwohl im Instanzdatensatz nachweislich Blau und Orange standen. Richtig ist ein
+unbegrenztes Post-Process-Volumen mit `auto_exposure_min_brightness == max_brightness`;
+die Helligkeit stellt man danach über `auto_exposure_bias` ein, nicht über die Lampen.
+**Die anderen Level haben dieses Volumen noch nicht** — beim Aufräumen nachziehen.
+
+*Kameraabstand wird an der Hülle gemessen, nicht am Mittelpunkt.* Der erste Anlauf rechnete
+den Abstand aus der Kantenlänge und stellte die Kamera damit bei 1895 Einheiten in einen
+Raum, der bis 1800 reicht. Richtig ist die Umkugel: `Abstand = Radius / sin(halber
+Bildwinkel)`, und zwar mit dem *senkrechten* Bildwinkel, denn der ist der kleinere.
+
 ### Offene Punkte
+
+**Die Mesoskala-Moleküle bleiben einfarbig — ungelöst.** Das ist der teuerste offene Punkt
+und der einzige, bei dem ich nicht weiterweiß.
+
+Was nachweislich stimmt: das Material hängt an der Komponente (`GetMaterial(0)` meldet es),
+es trägt das Nutzungskennzeichen für instanzierte Meshes, es übersetzt fehlerfrei, der
+Instanzpuffer hat die richtige Größe (1804 Werte für 451 Instanzen), und die Farbwerte
+stehen darin (0,25/0,62/0,95). Dasselbe Material rendert im Vergleichslevel im selben
+`-game`-Lauf voll farbig.
+
+Was ausgeschlossen ist — jeweils einzeln gebaut und angesehen:
+- Material selbst falsch → auch ein reines Rot und das Engine-Gittermaterial blieben grau
+- Komponentenklasse → die bewährte `UMolecularAtomsComponent` bleibt hier ebenfalls grau
+- Konstruktor-Unterobjekt gegen Laufzeiterzeugung → beides grau
+- Material vor oder nach dem Registrieren gesetzt → beides grau
+- Instanzen einmal aufgebaut gegen jedes Bild neu aufgebaut → beides grau
+- Beweglichkeit, Schattenwurf, `SetNumCustomDataFloats`-Setter, `AddInstanceComponent` →
+  alles auf den Stand des funktionierenden Fremdplugins gebracht, ohne Wirkung
+
+Der Unterschied zum funktionierenden Fall bleibt: dort werden Instanzen **im Editor**
+angelegt und mit dem Level gespeichert, hier entstehen sie zur Laufzeit.
+
+**Entscheidung für Silvan:** Die Demo ist auch einfarbig aussagekräftig — die zwei Arten
+sind an der Größe zu unterscheiden, Diffusion, Bindung und Staffelung laufen. Entweder das
+bleibt so und der Punkt kommt auf die Liste für später, oder ich baue die Färbung auf einen
+Weg um, der ohne Per-Instance-Daten auskommt: je Art eine eigene Instanzkomponente mit
+einem eigenen Materialexemplar. Das ist ein überschaubarer Umbau, der zugleich das
+Neuschreiben der Instanzdaten in jedem Bild einspart — aber es ist ein Umbau, und ich habe
+an diesem Punkt schon viel Zeit gelassen.
 
 **Impostor-Kugeln: abgebrochen, nicht aufgegeben.** Das Material steht als
 `M_MF_AtomImpostor` und ist vollständig verdrahtet — Kreisausschnitt, Kugelnormale,

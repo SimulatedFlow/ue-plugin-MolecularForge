@@ -10,6 +10,7 @@
 struct FMassEntityQuery;
 class UInstancedStaticMeshComponent;
 class UMolecularAtomsComponent;
+class UMaterialInterface;
 class UMolecularStructure;
 class UStaticMesh;
 
@@ -55,6 +56,24 @@ public:
 	TSoftObjectPtr<UStaticMesh> BlobMesh;
 
 	/**
+	 * Material der beiden Instanzstufen. Es muss die Instanzdaten 0..2 als Farbe lesen,
+	 * sonst bleiben alle Molekuele gleich eingefaerbt. Ohne Angabe wird das Atommaterial
+	 * des Plugins benutzt, das genau diese Belegung erwartet.
+	 */
+	UPROPERTY(EditAnywhere, BlueprintReadWrite, Category = "MolecularForge")
+	TSoftObjectPtr<UMaterialInterface> InstanceMaterial;
+
+	/**
+	 * Farbe je Molekuelart, nach Artenindex.
+	 *
+	 * Leer heisst nicht farblos, sondern: es wird eine eingebaute Reihe gut
+	 * unterscheidbarer Farbtoene benutzt. Ohne das saehe eine frisch gesetzte Population
+	 * als weisser Klumpen aus, und man koennte die Arten im Bild nicht trennen.
+	 */
+	UPROPERTY(EditAnywhere, BlueprintReadWrite, Category = "MolecularForge")
+	TArray<FLinearColor> SpeciesColors;
+
+	/**
 	 * Wie viele Molekuele hoechstens mit echten Atomen gezeichnet werden.
 	 * Jedes davon kostet so viel wie eine einzelne geladene Struktur.
 	 */
@@ -86,6 +105,9 @@ private:
 	};
 
 	void EnsureAtomPool();
+	UInstancedStaticMeshComponent* CreateInstanceComponent(FName Name);
+	UMaterialInterface* ResolveInstanceMaterial() const;
+	FLinearColor GetSpeciesColor(int32 SpeciesIndex) const;
 	void UpdateInstancedLevel(UInstancedStaticMeshComponent* Component,
 		const TArray<FMesoInstance>& Instances, bool bScaleByRadius);
 	void UpdateFullDetail(TArray<FMesoInstance>& Instances);
@@ -106,6 +128,7 @@ private:
 	TArray<FMesoInstance> BackboneDetail;
 	TArray<FMesoInstance> BlobDetail;
 	TArray<FTransform> TransformScratch;
+	TArray<float> CustomDataScratch;
 
 	int32 LastHiddenCount = 0;
 

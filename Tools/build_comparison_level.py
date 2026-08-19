@@ -11,7 +11,13 @@
 
 import math
 import os
+import sys
+
 import unreal
+
+sys.path.insert(0, os.path.join(unreal.Paths.project_dir(),
+                                "Plugins", "MolecularForge", "Tools"))
+import mf_szene
 
 LOG = unreal.log
 
@@ -169,6 +175,7 @@ def main():
         actors().destroy_actors(existing)
 
     build_lighting()
+    mf_szene.build_exposure_volume()
 
     for index, (representation, color_scheme, label) in enumerate(REPRESENTATIONS):
         build_specimen(index, representation, color_scheme, label)

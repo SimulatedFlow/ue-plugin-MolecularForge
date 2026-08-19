@@ -12,7 +12,13 @@
 
 import math
 import os
+import sys
+
 import unreal
+
+sys.path.insert(0, os.path.join(unreal.Paths.project_dir(),
+                                "Plugins", "MolecularForge", "Tools"))
+import mf_szene
 
 LOG = unreal.log
 
@@ -62,7 +68,9 @@ def build_lighting():
     key = spawn(unreal.DirectionalLight, unreal.Vector(0.0, 0.0, 1000.0),
                 unreal.Rotator(0.0, -45.0, 35.0), "Licht_Haupt")
     if key:
-        key.light_component.set_intensity(6.0)
+        # Von 6 auf 3,5 gesenkt, wie im Vergleichslevel: bei 6 liefen die hellen Atome
+        # aus. Die drei Level sollen als Satz gleich aussehen.
+        key.light_component.set_intensity(3.5)
         key.light_component.set_light_color(unreal.LinearColor(1.0, 0.97, 0.92, 1.0))
 
     rim = spawn(unreal.DirectionalLight, unreal.Vector(0.0, 0.0, 1000.0),
@@ -272,6 +280,7 @@ def main():
         get_actor_subsystem().destroy_actors(existing)
 
     build_lighting()
+    mf_szene.build_exposure_volume()
     LOG("Beleuchtung gesetzt.")
 
     actor = build_structure_actor()

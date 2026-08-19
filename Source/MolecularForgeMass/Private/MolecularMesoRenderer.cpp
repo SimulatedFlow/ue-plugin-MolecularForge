@@ -8,6 +8,8 @@
 
 #include "Components/InstancedStaticMeshComponent.h"
 #include "Engine/StaticMesh.h"
+#include "Materials/MaterialInterface.h"
+#include "UObject/ConstructorHelpers.h"
 #include "Engine/World.h"
 #include "Mass/EntityFragments.h"
 #include "MassEntityManager.h"
@@ -30,35 +32,78 @@ AMolecularMesoRenderer::AMolecularMesoRenderer()
 	USceneComponent* Root = CreateDefaultSubobject<USceneComponent>(TEXT("Root"));
 	SetRootComponent(Root);
 
-	BackboneInstances = CreateDefaultSubobject<UInstancedStaticMeshComponent>(TEXT("BackboneInstances"));
-	BackboneInstances->SetupAttachment(Root);
-	BackboneInstances->SetMobility(EComponentMobility::Movable);
-	BackboneInstances->SetCollisionEnabled(ECollisionEnabled::NoCollision);
-	BackboneInstances->SetCastShadow(false);
+	// Die beiden Instanzkomponenten entstehen nicht hier, sondern erst beim Spielstart —
+	// siehe CreateInstanceComponent().
+}
 
-	BlobInstances = CreateDefaultSubobject<UInstancedStaticMeshComponent>(TEXT("BlobInstances"));
-	BlobInstances->SetupAttachment(Root);
-	BlobInstances->SetMobility(EComponentMobility::Movable);
-	BlobInstances->SetCollisionEnabled(ECollisionEnabled::NoCollision);
-	BlobInstances->SetCastShadow(false);
+UInstancedStaticMeshComponent* AMolecularMesoRenderer::CreateInstanceComponent(FName Name)
+{
+	// Bewusst die Atomkugel-Komponente des Plugins und keine nackte Instanzkomponente:
+	// sie ist selbst eine Instanzkomponente, bringt Kugelmesh, Materialbelegung und die
+	// vier Instanzwerte fertig mit, und ohne zugewiesene Struktur baut sie von sich aus
+	// nichts. Eine nackte Komponente blieb in allen Versuchen grau, obwohl Material und
+	// Instanzdaten nachweislich richtig gesetzt waren.
+	UMolecularAtomsComponent* Component =
+		NewObject<UMolecularAtomsComponent>(this, UMolecularAtomsComponent::StaticClass(), Name);
+
+	Component->UnitsPerAngstrom = UnitsPerAngstrom;
+
+	// Beweglich, weil die Molekuele jedes Bild an anderer Stelle stehen. Die Voreinstellung
+	// einer Instanzkomponente ist unbeweglich, und das passt zu einer Population, die
+	// ununterbrochen diffundiert, ersichtlich nicht.
+	Component->SetMobility(EComponentMobility::Movable);
+
+	// Belegung wie bei den Atomkugeln: 0..2 Farbe, 3 Radius in Welteinheiten. Ueber den
+	// Setter und nicht ueber das Feld: nur der Setter passt den Instanzpuffer mit an.
+	Component->SetNumCustomDataFloats(4);
+	Component->SetCollisionEnabled(ECollisionEnabled::NoCollision);
+	Component->SetGenerateOverlapEvents(false);
+	Component->SetCanEverAffectNavigation(false);
+
+	if (UMaterialInterface* Material = InstanceMaterial.LoadSynchronous())
+	{
+		Component->AtomMaterial = Material;
+	}
+
+	Component->SetupAttachment(GetRootComponent());
+	Component->RegisterComponent();
+	AddInstanceComponent(Component);
+	return Component;
 }
 
 void AMolecularMesoRenderer::BeginPlay()
 {
 	Super::BeginPlay();
 
-	auto ResolveMesh = [](const TSoftObjectPtr<UStaticMesh>& Soft, const TCHAR* FallbackPath)
+	// Voreingestellt ist auch die mittlere Stufe eine Kugel. Ein Zylinder waere leichter
+	// von der fernen Stufe zu unterscheiden, sieht als Molekuel aber falsch aus — das Bild
+	// soll ein Zellinneres zeigen und kein Lager voller Fassdauben. Wer eine eigene
+	// Ersatzform hat, traegt sie oben ein.
+	BackboneInstances = CreateInstanceComponent(TEXT("BackboneInstances"));
+	BlobInstances = CreateInstanceComponent(TEXT("BlobInstances"));
+
+	// Eine eigene Ersatzform kommt erst nach dem Registrieren zum Zug. Der Meshwechsel
+	// wirft das Material der Komponente weg, deshalb wird es unmittelbar danach neu
+	// gesetzt und der Zeichenzustand erneuert.
+	auto ApplyCustomMesh = [this](UInstancedStaticMeshComponent* Component,
+		const TSoftObjectPtr<UStaticMesh>& Soft)
 	{
-		UStaticMesh* Mesh = Soft.LoadSynchronous();
-		return Mesh ? Mesh : LoadObject<UStaticMesh>(nullptr, FallbackPath);
+		UStaticMesh* Custom = Soft.LoadSynchronous();
+		if (!Component || !Custom)
+		{
+			return;
+		}
+
+		Component->SetStaticMesh(Custom);
+		if (UMaterialInterface* Material = ResolveInstanceMaterial())
+		{
+			Component->SetMaterial(0, Material);
+		}
+		Component->RecreateRenderState_Concurrent();
 	};
 
-	// Auch die mittlere Stufe ist voreingestellt eine Kugel. Ein Zylinder waere optisch
-	// leichter von der fernen Stufe zu unterscheiden, sieht als Molekuel aber falsch aus —
-	// und das Bild soll ein Zellinneres zeigen und nicht ein Lager voller Fassdauben.
-	// Wer eine eigene Ersatzform hat, traegt sie oben ein.
-	BackboneInstances->SetStaticMesh(ResolveMesh(BackboneMesh, TEXT("/Engine/BasicShapes/Sphere.Sphere")));
-	BlobInstances->SetStaticMesh(ResolveMesh(BlobMesh, TEXT("/Engine/BasicShapes/Sphere.Sphere")));
+	ApplyCustomMesh(BackboneInstances, BackboneMesh);
+	ApplyCustomMesh(BlobInstances, BlobMesh);
 
 	UWorld* World = GetWorld();
 	UMassEntitySubsystem* EntitySubsystem = World ? World->GetSubsystem<UMassEntitySubsystem>() : nullptr;
@@ -114,6 +159,47 @@ void AMolecularMesoRenderer::EnsureAtomPool()
 	}
 }
 
+UMaterialInterface* AMolecularMesoRenderer::ResolveInstanceMaterial() const
+{
+	UMaterialInterface* Material = InstanceMaterial.LoadSynchronous();
+	if (!Material)
+	{
+		Material = LoadObject<UMaterialInterface>(nullptr,
+			TEXT("/MolecularForge/Materials/M_MF_Atoms.M_MF_Atoms"));
+	}
+
+	if (!Material)
+	{
+		UE_LOG(LogMolecularForge, Warning,
+			TEXT("Mesoskala: kein Instanzmaterial gefunden — die Molekuele bleiben einfarbig."));
+	}
+
+	return Material;
+}
+
+FLinearColor AMolecularMesoRenderer::GetSpeciesColor(int32 SpeciesIndex) const
+{
+	if (SpeciesColors.IsValidIndex(SpeciesIndex))
+	{
+		return SpeciesColors[SpeciesIndex];
+	}
+
+	// Ersatzreihe fuer den Fall, dass niemand Farben eingetragen hat. Die Toene sind im
+	// Farbkreis weit auseinander gelegt, damit auch benachbarte Arten im Bild sofort
+	// auseinanderfallen — eine durchlaufende Skala saehe bei zwei Arten fast gleich aus.
+	static const FLinearColor Fallback[] = {
+		FLinearColor(0.25f, 0.62f, 0.95f),   // Blau
+		FLinearColor(0.95f, 0.55f, 0.20f),   // Orange
+		FLinearColor(0.40f, 0.85f, 0.45f),   // Gruen
+		FLinearColor(0.90f, 0.35f, 0.60f),   // Magenta
+		FLinearColor(0.85f, 0.82f, 0.30f),   // Gelb
+		FLinearColor(0.60f, 0.45f, 0.90f),   // Violett
+	};
+
+	const int32 Count = UE_ARRAY_COUNT(Fallback);
+	return Fallback[((SpeciesIndex % Count) + Count) % Count];
+}
+
 void AMolecularMesoRenderer::UpdateInstancedLevel(UInstancedStaticMeshComponent* Component,
 	const TArray<FMesoInstance>& Instances, bool bScaleByRadius)
 {
@@ -123,18 +209,26 @@ void AMolecularMesoRenderer::UpdateInstancedLevel(UInstancedStaticMeshComponent*
 	}
 
 	TransformScratch.Reset(Instances.Num());
+	CustomDataScratch.Reset(Instances.Num() * 4);
 
 	for (const FMesoInstance& Instance : Instances)
 	{
 		FTransform Transform = Instance.Transform;
 
+		const float RadiusUnits = Instance.ContactRadius * UnitsPerAngstrom;
 		if (bScaleByRadius)
 		{
-			const float Scale = (Instance.ContactRadius * UnitsPerAngstrom) / GEngineSphereRadius;
+			const float Scale = RadiusUnits / GEngineSphereRadius;
 			Transform.SetScale3D(FVector(FMath::Max(Scale, UE_KINDA_SMALL_NUMBER)));
 		}
 
 		TransformScratch.Add(Transform);
+
+		const FLinearColor Color = GetSpeciesColor(Instance.SpeciesIndex);
+		CustomDataScratch.Add(Color.R);
+		CustomDataScratch.Add(Color.G);
+		CustomDataScratch.Add(Color.B);
+		CustomDataScratch.Add(RadiusUnits);
 	}
 
 	// Die Instanzzahl aendert sich nur, wenn Molekuele die Stufe wechseln. Im ruhigen
@@ -151,6 +245,28 @@ void AMolecularMesoRenderer::UpdateInstancedLevel(UInstancedStaticMeshComponent*
 	{
 		Component->BatchUpdateInstancesTransforms(0, TransformScratch,
 			/*bWorldSpace=*/true, /*bMarkRenderStateDirty=*/true, /*bTeleport=*/true);
+	}
+
+	// Die Instanzdaten muessen jedes Bild neu geschrieben werden, obwohl sich die Farben
+	// nie aendern: die Liste ist nach Abstand sortiert, also steht in Platz n von Bild zu
+	// Bild ein anderes Molekuel. Vier Fliesskommazahlen je Instanz sind billig, aber es
+	// ist Arbeit, die man sich sparen koennte, wenn man je Art eine eigene Komponente
+	// fuehrte. Bei wenigen Arten waere das der schlechtere Tausch.
+	if (Component->NumCustomDataFloats == 4 && Component->GetInstanceCount() == TransformScratch.Num())
+	{
+		for (int32 Index = 0; Index < TransformScratch.Num(); ++Index)
+		{
+			const float* Values = CustomDataScratch.GetData() + Index * 4;
+			Component->SetCustomDataValue(Index, 0, Values[0], /*bMarkRenderStateDirty=*/false);
+			Component->SetCustomDataValue(Index, 1, Values[1], false);
+			Component->SetCustomDataValue(Index, 2, Values[2], false);
+			Component->SetCustomDataValue(Index, 3, Values[3], false);
+		}
+
+		if (!TransformScratch.IsEmpty())
+		{
+			Component->MarkRenderStateDirty();
+		}
 	}
 }
 
@@ -306,5 +422,22 @@ void AMolecularMesoRenderer::Tick(float DeltaSeconds)
 		UE_LOG(LogMolecularForge, Log,
 			TEXT("Mesoskala-Darstellung: %d nah, %d mittel, %d fern, %d ausgeblendet."),
 			FullDetail.Num(), BackboneDetail.Num(), BlobDetail.Num(), LastHiddenCount);
+
+		// Welches Material wirklich an den Instanzen haengt und ob Farbwerte ankommen.
+		// Beides einmal auszugeben ist billiger als ein weiterer Ratedurchgang: bleibt
+		// hier "BasicShapeMaterial" stehen, hat die Engine still ersetzt.
+		if (const UMaterialInterface* Applied = BlobInstances ? BlobInstances->GetMaterial(0) : nullptr)
+		{
+			UE_LOG(LogMolecularForge, Log,
+				TEXT("Mesoskala-Material: %s, %d Instanzwerte, Puffer %d fuer %d Instanzen, ")
+				TEXT("erste Farbe im Puffer %.2f/%.2f/%.2f."),
+				*Applied->GetName(),
+				BlobInstances->NumCustomDataFloats,
+				BlobInstances->PerInstanceSMCustomData.Num(),
+				BlobInstances->GetInstanceCount(),
+				BlobInstances->PerInstanceSMCustomData.Num() > 2 ? BlobInstances->PerInstanceSMCustomData[0] : -1.f,
+				BlobInstances->PerInstanceSMCustomData.Num() > 2 ? BlobInstances->PerInstanceSMCustomData[1] : -1.f,
+				BlobInstances->PerInstanceSMCustomData.Num() > 2 ? BlobInstances->PerInstanceSMCustomData[2] : -1.f);
+		}
 	}
 }

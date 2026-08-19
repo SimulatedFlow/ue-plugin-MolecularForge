@@ -12,7 +12,13 @@
 
 import math
 import os
+import sys
+
 import unreal
+
+sys.path.insert(0, os.path.join(unreal.Paths.project_dir(),
+                                "Plugins", "MolecularForge", "Tools"))
+import mf_szene
 
 LOG = unreal.log
 
@@ -53,18 +59,20 @@ def build_lighting():
     key = spawn(unreal.DirectionalLight, unreal.Vector(0.0, 0.0, 2000.0),
                 unreal.Rotator(0.0, -55.0, 25.0), "Licht_Haupt")
     if key:
-        key.light_component.set_intensity(3.5)
+        # Niedriger als in den anderen Levels. Hier stehen hunderte helle Kugeln dicht
+        # beieinander und werfen sich gegenseitig Licht zu; mit 3,5 brannte das Bild aus.
+        key.light_component.set_intensity(2.2)
 
     rim = spawn(unreal.DirectionalLight, unreal.Vector(0.0, 0.0, 2000.0),
                 unreal.Rotator(0.0, -10.0, -150.0), "Licht_Kante")
     if rim:
-        rim.light_component.set_intensity(2.2)
+        rim.light_component.set_intensity(1.3)
         rim.light_component.set_light_color(unreal.LinearColor(0.45, 0.68, 1.0, 1.0))
         rim.light_component.set_cast_shadows(False)
 
     sky = spawn(unreal.SkyLight, unreal.Vector(0.0, 0.0, 500.0), None, "Licht_Umgebung")
     if sky:
-        sky.light_component.set_intensity(0.8)
+        sky.light_component.set_intensity(0.5)
 
 
 def build_spawner():
@@ -151,8 +159,9 @@ def camera_distance():
     radius = math.sqrt(BOUNDS_EXTENT.x ** 2 + BOUNDS_EXTENT.y ** 2 + BOUNDS_EXTENT.z ** 2)
 
     # Der Kasten ist keine Kugel; schraeg gesehen ist seine Silhouette deutlich kleiner als
-    # die Umkugel. Die 0,85 holen das wieder heran, ohne den Rand anzuschneiden.
-    return radius / math.sin(half_v) * 0.85
+    # die Umkugel — und weil er flach ist, faellt der Unterschied hier gross aus. Der Faktor
+    # holt das wieder heran, ohne den Rand anzuschneiden; nachgemessen am fertigen Bild.
+    return radius / math.sin(half_v) * 0.68
 
 
 def build_camera():
@@ -207,6 +216,9 @@ def main():
         actors().destroy_actors(existing)
 
     build_lighting()
+    # Etwas heller als die anderen beiden Level: das Motiv ist hier weit weg und fuellt
+    # nur die Bildmitte, und die Kugeln haben keine eigenen Glanzlichter.
+    mf_szene.build_exposure_volume(bias=3.0)
     build_spawner()
     build_renderer()
     build_camera()
