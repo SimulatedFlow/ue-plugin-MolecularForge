@@ -22,7 +22,8 @@ NAME = "MolecularForge"
 ZIEL_ORDNER = os.path.join(os.path.expanduser("~"), "Desktop", "Fab-Upload-" + NAME)
 
 # Ordner, die nie mitgehen: Bauartefakte und Werkzeugstaende.
-VERBOTENE_ORDNER = {"Binaries", "Intermediate", "Saved", ".git", ".vs", "DerivedDataCache"}
+VERBOTENE_ORDNER = {"Binaries", "Intermediate", "Saved", ".git", ".vs", "DerivedDataCache",
+                    "Docs"}
 
 # Einzelne Dateien, die nicht zum Kaeufer gehoeren.
 VERBOTENE_DATEIEN = {"PLAN.md", ".gitignore"}
@@ -37,9 +38,11 @@ TOOLS_MITLIEFERN = {
     "mf_szene.py",
 }
 
-# Das Video ist Listing-Material und wird bei Fab getrennt hochgeladen; im Plugin waere es
-# nur Ballast.
-DOCS_AUSLASSEN = {"Video"}
+# `Docs` geht gar nicht mit ins Archiv. Bilder und Video sind Listing-Material: sie werden
+# bei Fab getrennt hochgeladen und liegen im Quellbestand fuer die Repo-Ansicht. Im Plugin
+# waeren sie nur Ballast — mit den fuenf Galeriebildern waere das Archiv von 4,5 auf 9,7 MB
+# gewachsen, ohne dass der Kaeufer etwas davon haette. Sie werden weiter unten neben das
+# Archiv gelegt.
 
 # Einzelne Assets, die nicht mitgehen.
 #
@@ -60,8 +63,6 @@ def soll_mit(relativ):
     if len(teile) == 1 and teile[0] in VERBOTENE_DATEIEN:
         return False
     if teile[0] == "Tools" and (len(teile) < 2 or teile[1] not in TOOLS_MITLIEFERN):
-        return False
-    if teile[0] == "Docs" and len(teile) > 1 and teile[1] in DOCS_AUSLASSEN:
         return False
     if relativ.replace("\\", "/") in VERBOTENE_ASSETS:
         return False

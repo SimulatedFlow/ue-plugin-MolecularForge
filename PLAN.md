@@ -17,8 +17,26 @@ Kern in einem Satz: *PDB-/mmCIF-Datei oder UniProt-ID rein → performantes, ani
 Netzabruf-Tests gegen die echten Server.
 
 **Das Fab-Paket liegt fertig in `Desktop\Fab-Upload-MolecularForge\`** — Archiv, Listing-
-text, Attributionstext und das Bild-/Videomaterial. Hochgeladen ist nichts; der Absende-
-knopf gehört Silvan.
+text, Attributionstext, Wiki-Entwurf und acht Bilder plus Video. Hochgeladen ist nichts;
+der Absendeknopf gehört Silvan.
+
+**Der Fab-Entwurf ist angelegt und ausgefüllt:**
+`https://www.fab.com/portal/listings/bfb96d7c-48e1-437f-a8c7-19b164eb1e72/edit`
+Titel, Beschreibung, Produktart „Tools & Plugins", Kategorie „Engine Tools", fünf
+Schlagwörter (Visualization, Science, Simulation, Education, Medical), Standardlizenz,
+kein Forumsbeitrag, kein nicht jugendfreier Inhalt. Es fehlt nur, was Silvan gehört:
+Datei-Link (die ZIPs liegen bei den anderen Plugins auf Google Drive), Titelbild und
+Galerie, Preis, die KI-Angabe und das Absenden.
+
+**Acht Listing-Bilder**, darunter je eines pro Darstellungsart an derselben Struktur
+(GFP), damit sie vergleichbar sind — beim Rückgrat ausnahmsweise Hämoglobin, weil
+Kettenfärbung an einer einzelnen Kette nichts zeigt.
+
+**Die Wiki-Seite ist geschrieben, aber nicht veröffentlicht:**
+`Docs/Wiki_MolecularForge.md`, im Aufbau der bestehenden Seiten (H1, Einleitung, Key
+Features, Availability). Für wiki.teufel-engineering.com fehlt die Anmeldung — im
+`.env` steht kein Wiki-Zugang. Zu tun bleibt: Seite unter `/en/MolecularForge` anlegen
+und in der Navigation unter „Current-Plugins" eintragen.
 
 **Zwei Festlegungen darin, die er ändern kann, wenn er anders entscheidet:**
 - Die Fassung steht auf `VersionName 1.0.0` und `IsBetaVersion: false`, wie bei den

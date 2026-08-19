@@ -47,18 +47,27 @@ CAMERA_FOV_DEGREES = 90.0
 # Struktur das ganze Motiv und muss nicht mit Beiwerk teilen.
 CAMERA_FILL_FRACTION = 0.62
 
-# Name -> (Darstellung, Farbschema, Dateiname).
+# Haemoglobin fuer das Rueckgratbild, und nur dafuer.
+#
+# Das bricht bewusst die sonst gleiche Struktur. Kettenfaerbung an einem Molekuel mit
+# genau einer Kette ist eine einzige Farbe — GFP ergab einen rosa Klumpen, der ueber
+# Darstellung und Farbschema beides nichts aussagt. Haemoglobin hat vier Ketten, und damit
+# zeigt das Bild, wofuer die Faerbung da ist. Vergleichbarkeit ist hier das schwaechere
+# Argument: ein nichtssagendes Bild vergleicht sich mit nichts.
+HAEMOGLOBIN = "Plugins/MolecularForge/Demo/4HHB.pdb"
+
+# Name -> (Darstellung, Farbschema, Dateiname, Struktur oder None fuer die Vorgabe).
 DARSTELLUNGEN = {
     "SPACE_FILLING": (unreal.MolRepresentation.SPACE_FILLING,
-                      unreal.MolColorScheme.ELEMENT, "10_SpaceFilling"),
+                      unreal.MolColorScheme.ELEMENT, "10_SpaceFilling", None),
     "BALL_AND_STICK": (unreal.MolRepresentation.BALL_AND_STICK,
-                       unreal.MolColorScheme.ELEMENT, "11_BallAndStick"),
+                       unreal.MolColorScheme.ELEMENT, "11_BallAndStick", None),
     "BACKBONE": (unreal.MolRepresentation.BACKBONE,
-                 unreal.MolColorScheme.CHAIN, "12_Rueckgrat"),
+                 unreal.MolColorScheme.CHAIN, "12_Rueckgrat", HAEMOGLOBIN),
     "CARTOON": (unreal.MolRepresentation.CARTOON,
-                unreal.MolColorScheme.SECONDARY_STRUCTURE, "13_Cartoon"),
+                unreal.MolColorScheme.SECONDARY_STRUCTURE, "13_Cartoon", None),
     "SURFACE": (unreal.MolRepresentation.SURFACE,
-                unreal.MolColorScheme.ELEMENT, "14_Oberflaeche"),
+                unreal.MolColorScheme.ELEMENT, "14_Oberflaeche", None),
 }
 
 
@@ -93,14 +102,14 @@ def build_lighting():
         sky.light_component.set_intensity(0.6)
 
 
-def build_specimen(representation, color_scheme):
+def build_specimen(representation, color_scheme, struktur):
     actor = spawn(unreal.MolecularStructureActor, unreal.Vector(0.0, 0.0, 0.0),
                   None, "Schaustueck")
     if not actor:
         LOG("FEHLER: MolecularStructureActor liess sich nicht erzeugen.")
         return None
 
-    actor.set_editor_property("StructureFilePath", STRUCTURE_RELATIVE_PATH)
+    actor.set_editor_property("StructureFilePath", struktur or STRUCTURE_RELATIVE_PATH)
     actor.set_editor_property("bLoadOnBeginPlay", True)
     actor.set_editor_property("Representation", representation)
     actor.set_editor_property("ColorScheme", color_scheme)
@@ -148,13 +157,28 @@ def build_camera(actor):
     Atomgrenzen gerechnet war die Oberflaeche oben angeschnitten — und zwar genau bei der
     Darstellung, die am meisten Platz braucht.
     """
-    radius_units = 450.0
+    # Zwei Messungen, und es gilt die groessere.
+    #
+    # Die Actor-Huelle allein genuegt nicht: bei den instanzierten Darstellungen
+    # (Kalotten, Kugel-Stab, Rueckgrat) liefert sie zu diesem Zeitpunkt noch nichts, und
+    # das Bild wurde daraufhin briefmarkengross. Die Atomgrenzen allein genuegen auch
+    # nicht: Oberflaeche und Band reichen darueber hinaus. Zusammen stimmen sie.
+    radius_units = 0.0
+
+    structure = actor.get_structure() if actor else None
+    if structure:
+        bounds = structure.get_bounds_angstrom()
+        extent = bounds.max - bounds.min
+        # Der Zuschlag deckt den van-der-Waals-Radius der aeussersten Atome ab; die
+        # Grenzen gelten fuer Mittelpunkte, gezeichnet werden aber Kugeln.
+        radius_units = max(extent.x, extent.y, extent.z) * 0.5 * UNITS_PER_ANGSTROM * 1.08
 
     if actor:
-        _, extent = actor.get_actor_bounds(only_colliding_components=False)
-        gemessen = max(extent.x, extent.y, extent.z)
-        if gemessen > 1.0:
-            radius_units = gemessen
+        _, huelle = actor.get_actor_bounds(only_colliding_components=False)
+        radius_units = max(radius_units, huelle.x, huelle.y, huelle.z)
+
+    if radius_units < 1.0:
+        radius_units = 450.0
 
     half_fov = math.radians(CAMERA_FOV_DEGREES * 0.5)
     distance = radius_units / (math.tan(half_fov) * CAMERA_FILL_FRACTION)
@@ -190,7 +214,7 @@ def main():
             % (schluessel, ", ".join(sorted(DARSTELLUNGEN))))
         return
 
-    representation, color_scheme, dateiname = DARSTELLUNGEN[schluessel]
+    representation, color_scheme, dateiname, struktur = DARSTELLUNGEN[schluessel]
 
     LOG("=" * 78)
     LOG("MolecularForge — Galeriebild '%s' (%s)" % (schluessel, dateiname))
@@ -207,7 +231,7 @@ def main():
 
     build_lighting()
     mf_szene.build_exposure_volume()
-    actor = build_specimen(representation, color_scheme)
+    actor = build_specimen(representation, color_scheme, struktur)
     build_camera(actor)
     save_level()
 
