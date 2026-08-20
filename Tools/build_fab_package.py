@@ -154,10 +154,17 @@ def packe(dateien):
 
     listing = os.path.join(ZIEL_ORDNER, "Listing-Material")
     os.makedirs(listing)
-    for unterordner in ("Bilder", "Video"):
+    for unterordner, endungen in (("Bilder", (".png", ".jpg")), ("Video", (".mp4",))):
         quelle = os.path.join(PLUGIN, "Docs", unterordner)
-        if os.path.isdir(quelle):
-            shutil.copytree(quelle, os.path.join(listing, unterordner))
+        if not os.path.isdir(quelle):
+            continue
+        ziel = os.path.join(listing, unterordner)
+        os.makedirs(ziel)
+        # Nur fertige Dateien: die Rohtonspur und Zwischenstaende gehoeren nicht in eine
+        # Mappe, aus der jemand blind alles hochlaedt.
+        for name in sorted(os.listdir(quelle)):
+            if name.lower().endswith(endungen) and not name.startswith("_"):
+                shutil.copy2(os.path.join(quelle, name), os.path.join(ziel, name))
 
     return archiv
 

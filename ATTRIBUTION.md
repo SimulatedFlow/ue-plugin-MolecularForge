@@ -60,6 +60,19 @@ Element covalent and van-der-Waals radii follow the values commonly tabulated in
 chemical literature (Bondi 1964 and successors); CPK colouring follows the convention used
 by the common molecular viewers.
 
+## Narration in the presentation video
+
+The spoken commentary in `MolecularForge_Mesoskala_kommentiert.mp4` is synthesised, not
+recorded. It is listing material and is not part of the plugin.
+
+- **Model:** Kokoro-82M, run locally through `kokoro-onnx`
+- **Voice:** English default voice `af_bella`
+- **Licence:** Apache-2.0 — free for commercial use
+
+The script is in `Docs/Video_Kommentar.txt` and the build step in
+`Tools/build_video_narration.py`, so the commentary can be regenerated whenever the plugin
+changes rather than being re-recorded by hand.
+
 ## Engine content
 
 The example levels use the standard Unreal Engine `BasicShapes` meshes and no other Epic

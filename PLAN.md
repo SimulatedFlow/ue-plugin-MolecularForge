@@ -99,6 +99,18 @@ vollständig im Bild — vorher liefen die äußeren beiden hinaus.
 - `Bilder/02_GFP_SpaceFilling.png` — GFP, 1771 Atome in CPK-Farben
 - `Bilder/03_Mesoskala.png` — Population aus 780 Molekülen
 - `Video/MolecularForge_Mesoskala.mp4` — 1920×1080, 30 Bilder/s, 5,3 s Diffusion und Bindung
+- `Video/MolecularForge_Mesoskala_kommentiert.mp4` — dasselbe Bild mit gesprochenem
+  Kommentar, 4:43, 76 MB. Der Text steht in `Docs/Video_Kommentar.txt`, gebaut von
+  `Tools/build_video_narration.py`.
+
+**Zur Vertonung**, damit sie reproduzierbar bleibt: Kokoro-82M über `kokoro-onnx`,
+englische Standardstimme `af_bella`, Apache-2.0 und damit kommerziell frei. Modell liegt
+lokal unter `AppData\Local\hermes\tts\kokoro\`. Der Kommentar ist mit 4:43 deutlich länger
+als der Ausschnitt, deshalb läuft das Bild in einer Schleife — und zwar als Vor-und-
+Zurück-Lauf, weil ein einfacher Rundlauf über fünfzig harte Sprünge erzeugt hätte.
+Rückwärts laufende Diffusion sieht aus wie Diffusion; bei einer gerichteten Bewegung wäre
+dieser Kniff nicht zulässig. Kompression: CRF 30 statt 20 — gemessen 230 MB gegen 76 MB,
+bei diesem Motiv (schwarzer Grund, glatte einfarbige Kugeln) ohne sichtbaren Verlust.
 
 **Kleinigkeit, die noch offen ist:** Die Gauß-Oberfläche wirkt bei Blobbiness −2,3 recht
 knubbelig — jedes Atom zeichnet sich einzeln ab. Für Schaubilder wäre ein weicherer Wert
