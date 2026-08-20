@@ -50,7 +50,7 @@ Kettenfärbung an einer einzelnen Kette nichts zeigt.
 
 **Die Wiki-Seite ist geschrieben, aber nicht veröffentlicht:**
 `Docs/Wiki_MolecularForge.md`, im Aufbau der bestehenden Seiten (H1, Einleitung, Key
-Features, Availability). Für wiki.teufel-engineering.com fehlt die Anmeldung: `/e/en/...`
+Features, Availability). Für github.com/SimulatedFlow fehlt die Anmeldung: `/e/en/...`
 antwortet „Unauthorized", im `.env` steht kein Wiki-Zugang und im Browser ist kein
 Passwort hinterlegt. Zu tun bleibt, sobald der Zugang da ist: Seite unter
 `/en/MolecularForge` anlegen und in der Navigation unter „Current-Plugins" eintragen.
