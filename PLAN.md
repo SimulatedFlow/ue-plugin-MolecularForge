@@ -103,6 +103,23 @@ vollständig im Bild — vorher liefen die äußeren beiden hinaus.
   Kommentar, 4:43, 76 MB. Der Text steht in `Docs/Video_Kommentar.txt`, gebaut von
   `Tools/build_video_narration.py`.
 
+**Das Video liegt auf YouTube:** `https://youtu.be/O2QdO1aakes`, Kanal *Wacky Game
+Engineer* (UCoK17ecDhWD8D4WsDByRJhg), **öffentlich**. Hochgeladen über die vorhandene
+Pipeline `hermes\scripts\yt_upload.py --profile default` (offizielle Data API, kein
+Browser-Bot); Beschreibung aus `Docs/Video_Beschreibung_YouTube.txt`, mit Offenlegung der
+synthetischen Stimme.
+
+**Merken für das nächste Mal:** YouTube Studio stand im Browser auf *Electric Noosphere*.
+Ein Upload über die Oberfläche wäre auf dem falschen Kanal gelandet. Die Pipeline nennt
+das Ziel vor jedem Lauf und `--whoami --all` prüft für alle drei Profile, ob der Token
+noch auf den Kanal zeigt, auf dem die bisherigen Uploads liegen.
+
+**`yt_upload.py` kann jetzt Sichtbarkeit ändern**, ohne neu zu laden:
+`--set-privacy "<id|url>" --privacy public`. Das Skript liest den Status erst und
+schreibt ihn vollständig zurück, weil `videos.update` den ganzen `status`-Teil ersetzt —
+schickt man nur `privacyStatus`, setzt man dabei unter anderem die Kinder-Erklärung
+zurück. Kostet 51 Kontingenteinheiten statt 1600 für einen Upload.
+
 **Zur Vertonung**, damit sie reproduzierbar bleibt: Kokoro-82M über `kokoro-onnx`,
 englische Standardstimme `af_bella`, Apache-2.0 und damit kommerziell frei. Modell liegt
 lokal unter `AppData\Local\hermes\tts\kokoro\`. Der Kommentar ist mit 4:43 deutlich länger

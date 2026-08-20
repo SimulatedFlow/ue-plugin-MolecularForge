@@ -1,0 +1,37 @@
+Load real protein structures into Unreal Engine 5.8 and render them five ways — space-filling, ball-and-stick, backbone, cartoon ribbon and Gaussian surface — switchable at runtime on a single actor.
+
+What you see in this video is the mesoscale demo: 780 molecules in two species, spawned as Mass entities, moving by Brownian diffusion, reflecting off the bounds of the volume, and associating and dissociating with per-second rates. The small orange ligands you see sitting on the larger blue proteins are bound, not decorative.
+
+WHAT THE PLUGIN DOES
+
+• Reads PDB and mmCIF directly in the engine — fixed-column and token-based. Element, residue, chain and B-factor are kept for every atom. The same entry in both formats parses to the same atoms, and an automated test checks that atom by atom.
+• Fetches structures from the RCSB Protein Data Bank by PDB ID, or from the AlphaFold database by UniProt accession, with an on-disk cache and a background parse that does not stall the game thread.
+• Five representations on one actor, switchable at runtime.
+• Secondary structure computed in-engine after Kabsch & Sander (1983), or taken from the file's own HELIX/SHEET records.
+• A PyMOL-style selection language: chain A and resi 10-25 and not name CA — parsed by recursive descent, usable from Blueprint.
+• Measurements: distance, angle and dihedral with the IUPAC sign convention.
+• DCD trajectory playback with frame interpolation, both byte orders.
+• Mesoscale crowding on Unreal's Mass framework, with distance-staggered drawing.
+• Niagara handoff through array parameters — any particle system can read the structure.
+• Colour by element (CPK), chain, secondary structure, B-factor, or AlphaFold pLDDT confidence.
+
+HONEST LIMITS
+
+Atoms are drawn as real sphere geometry through instanced static meshes. That is comfortable for structures of a few thousand atoms; it is not a renderer for a whole virus capsid. Trajectory support is DCD only — XTC needs a compression library and is not included. The mesoscale layer models diffusion and binding; it is not a molecular-dynamics force field and does not claim to be one.
+
+REQUIREMENTS
+
+Unreal Engine 5.8, Windows. Depends only on engine plugins that ship with the editor: ProceduralMeshComponent, Niagara and MassGameplay. Five runtime C++ modules, 53 automation tests that run offline, three example levels, three demo structures.
+
+LINKS
+
+All our UE5 plugins on Fab: https://www.fab.com/sellers/Silvan%20Teufel
+Source repository: https://github.com/SimulatedFlow/ue-plugin-MolecularForge
+
+DATA LICENCES
+
+The demo structures (crambin 1CRN, green fluorescent protein 1EMA, human deoxyhaemoglobin 4HHB) come from the RCSB Protein Data Bank. Structures downloaded at runtime carry the licence of their source — AlphaFold models are CC-BY 4.0, and naming the source is a condition of that licence. The plugin supplies the attribution string on every loaded structure.
+
+DISCLOSURE
+
+The spoken commentary in this video is synthetic speech, not a human recording. It was generated locally with Kokoro-82M (kokoro-onnx), English default voice af_bella, Apache-2.0 licensed and free for commercial use. The footage is real engine output, recorded from the plugin's own mesoscale demo level; because the commentary is longer than the recorded clip, the footage loops.
