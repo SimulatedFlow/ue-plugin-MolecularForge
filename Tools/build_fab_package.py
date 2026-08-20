@@ -132,16 +132,25 @@ def packe(dateien):
         shutil.rmtree(ZIEL_ORDNER)
     os.makedirs(ZIEL_ORDNER)
 
-    archiv = os.path.join(ZIEL_ORDNER, "%s_UE5.8.zip" % NAME)
+    # Der Dateiname ist nicht beliebig: unter genau diesem Namen liegt das Archiv auf
+    # Google Drive, und der Fab-Eintrag verweist auf jene Datei. Wird hier umbenannt,
+    # zeigt der Verkaufseintrag beim naechsten Austausch auf eine andere Datei als die,
+    # die gebaut wurde.
+    archiv = os.path.join(ZIEL_ORDNER, "%s.zip" % NAME)
     with zipfile.ZipFile(archiv, "w", zipfile.ZIP_DEFLATED, compresslevel=9) as z:
         for relativ in dateien:
             # Im Archiv liegt alles unter einem Ordner mit dem Plugin-Namen, sonst
             # entpackt der Kaeufer den Inhalt in sein Plugins-Verzeichnis statt daneben.
             z.write(os.path.join(PLUGIN, relativ), os.path.join(NAME, relativ))
 
-    # Der Listing-Text und die Bilder wandern daneben, nicht ins Archiv.
+    # Der Listing-Text, der Attributionstext und der Wiki-Entwurf wandern daneben,
+    # nicht ins Archiv.
     for zusatz in ("DESCRIPTION.md", "ATTRIBUTION.md"):
         shutil.copy2(os.path.join(PLUGIN, zusatz), os.path.join(ZIEL_ORDNER, zusatz))
+
+    wiki = os.path.join(PLUGIN, "Docs", "Wiki_MolecularForge.md")
+    if os.path.isfile(wiki):
+        shutil.copy2(wiki, os.path.join(ZIEL_ORDNER, "Wiki_MolecularForge.md"))
 
     listing = os.path.join(ZIEL_ORDNER, "Listing-Material")
     os.makedirs(listing)

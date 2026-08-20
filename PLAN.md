@@ -20,13 +20,29 @@ Netzabruf-Tests gegen die echten Server.
 text, Attributionstext, Wiki-Entwurf und acht Bilder plus Video. Hochgeladen ist nichts;
 der Absendeknopf gehört Silvan.
 
-**Der Fab-Entwurf ist angelegt und ausgefüllt:**
+**Der Fab-Entwurf ist vollständig bis auf die Bilder:**
 `https://www.fab.com/portal/listings/bfb96d7c-48e1-437f-a8c7-19b164eb1e72/edit`
 Titel, Beschreibung, Produktart „Tools & Plugins", Kategorie „Engine Tools", fünf
 Schlagwörter (Visualization, Science, Simulation, Education, Medical), Standardlizenz,
-kein Forumsbeitrag, kein nicht jugendfreier Inhalt. Es fehlt nur, was Silvan gehört:
-Datei-Link (die ZIPs liegen bei den anderen Plugins auf Google Drive), Titelbild und
-Galerie, Preis, die KI-Angabe und das Absenden.
+kein Forumsbeitrag, kein nicht jugendfreier Inhalt, **KI-Angabe auf „ja"**.
+
+- **Preis: 29,99 USD Personal, 59,99 USD Professional** (im Laden 25,88 €). Der Anker war
+  ZoneManager mit rund 13 €; MolecularForge ist mit fünf Modulen, zwei Archivformaten,
+  DSSP, Auswahlsprache, Trajektorien und Mass-Ebene deutlich umfangreicher. Professional
+  als das Doppelte, die übliche Staffelung. Beides mit einem Klick änderbar.
+- **Projektversion** eingetragen: Titel „UE 5.8", UE_5.8, Windows, Datei-Link auf Drive.
+- **Technische Angaben**: Entwicklungsplattform Windows, Vertriebsart „Plugin", keine
+  Fremdsoftware, nicht quelloffen, Werkzeugart „Runtime library", 0 Blueprints,
+  30 C++-Klassen (17 UCLASS + 13 USTRUCT), Zusatztext mit Doku-Link und Datenlizenzen.
+
+**Das Archiv liegt auf Google Drive**, nach derselben Ordnung wie die anderen Plugins:
+`Unreal Projects / MolecularForge 1.0.0 - Unreal 5.8 / MolecularForge.zip`, freigegeben
+für jeden mit dem Link. **Der Dateiname ist bindend** — `build_fab_package.py` schreibt
+genau diesen Namen, weil der Fab-Eintrag darauf zeigt. Wird das Archiv neu gebaut, muss
+die Datei auf Drive ersetzt (nicht daneben gelegt) werden, sonst zeigt der Verkaufs-
+eintrag auf einen alten Stand.
+
+Offen bleibt bei Fab nur: **Titelbild und Galerie** (lädt Silvan hoch) und das Absenden.
 
 **Acht Listing-Bilder**, darunter je eines pro Darstellungsart an derselben Struktur
 (GFP), damit sie vergleichbar sind — beim Rückgrat ausnahmsweise Hämoglobin, weil
@@ -34,9 +50,10 @@ Kettenfärbung an einer einzelnen Kette nichts zeigt.
 
 **Die Wiki-Seite ist geschrieben, aber nicht veröffentlicht:**
 `Docs/Wiki_MolecularForge.md`, im Aufbau der bestehenden Seiten (H1, Einleitung, Key
-Features, Availability). Für github.com/SimulatedFlow fehlt die Anmeldung — im
-`.env` steht kein Wiki-Zugang. Zu tun bleibt: Seite unter `/en/MolecularForge` anlegen
-und in der Navigation unter „Current-Plugins" eintragen.
+Features, Availability). Für wiki.teufel-engineering.com fehlt die Anmeldung: `/e/en/...`
+antwortet „Unauthorized", im `.env` steht kein Wiki-Zugang und im Browser ist kein
+Passwort hinterlegt. Zu tun bleibt, sobald der Zugang da ist: Seite unter
+`/en/MolecularForge` anlegen und in der Navigation unter „Current-Plugins" eintragen.
 
 **Zwei Festlegungen darin, die er ändern kann, wenn er anders entscheidet:**
 - Die Fassung steht auf `VersionName 1.0.0` und `IsBetaVersion: false`, wie bei den
