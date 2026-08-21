@@ -1,8 +1,12 @@
-// Copyright Simulated Flow. All Rights Reserved.
+// Copyright 2026 Simulated Flow All Rights Reserved.
 
 #pragma once
 
 #include "CoreMinimal.h"
+// FRandomStream steht in der Schnittstelle weiter unten. CoreMinimal.h zieht die Klasse
+// nicht mit; im Unity-Build kommt sie zufaellig ueber eine Nachbardatei herein, in einem
+// Einzelbau nicht. Genau daran ist die Fab-Pruefung gescheitert.
+#include "Math/RandomStream.h"
 #include "MolMesoscaleMath.generated.h"
 
 /** Was mit einem Molekuel geschieht, das den erlaubten Raum verlaesst. */

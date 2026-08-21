@@ -10,6 +10,33 @@ Kern in einem Satz: *PDB-/mmCIF-Datei oder UniProt-ID rein → performantes, ani
 
 ## 0. Stand — hier weitermachen
 
+### Fab-Prüfung vom 20.08.2026: abgelehnt, fünf Punkte
+
+Der Bericht liegt als `molecularforge_… - UE Full TRC.pdf` in `Downloads`, die
+Übersetzungsfehler als `Errors - 26310813.txt`. **Alles behoben, aber noch nicht erneut
+eingereicht** — das gehört Silvan.
+
+1. **Das Plugin ließ sich nicht übersetzen.** Fab baut ohne Unity-Build; dann braucht jede
+   Datei ihre eigenen Includes, statt sie zufällig über eine Nachbardatei mitzubekommen.
+   Fünf fehlten: `Math/RandomStream.h`, zweimal `Misc/Paths.h`, `UObject/Package.h`,
+   `UObject/GCObject.h`. Bei uns baute es trotzdem, deshalb ist das nie aufgefallen.
+   **Reproduzieren mit** `RunUAT BuildPlugin` (siehe unten) — nicht mit dem normalen
+   Editor-Bau.
+2. **Jedes Modul braucht `PlatformAllowList`.** Jetzt `["Win64"]` in allen fünf.
+3. **Copyright-Zeile ohne Jahr wurde abgelehnt.** War
+   `// Copyright Simulated Flow. All Rights Reserved.`, ist jetzt
+   `// Copyright 2026 Simulated Flow All Rights Reserved.` — dieselbe Form wie im
+   angenommenen ZoneManager, in allen 112 Quelldateien.
+4. **`FilterPlugin.ini` muss *jede* Datei außerhalb der erwarteten Struktur aufzählen.**
+   `DESCRIPTION.md` fehlte. Erwartet sind nur `Config`, `Content`, `Resources`, `Source`
+   und die `.uplugin`.
+5. **Eigener Python-Code gehört nach `Content/Python/`.** Die fünf ausgelieferten Skripte
+   liegen jetzt dort; `Tools/` geht gar nicht mehr mit ins Paket und enthält nur noch
+   unsere Bau- und Diagnosewerkzeuge.
+
+`Tools/build_fab_package.py` prüft die Punkte 2 bis 5 jetzt **vor** dem Packen und
+verweigert sonst den Dienst. Punkt 1 fängt nur ein echter Plugin-Bau ab.
+
 *Letzte Aktualisierung: 2026-08-19.*
 
 **Alle fünf Phasen sind abgeschlossen.** Alle fünf Module bauen sauber gegen UE 5.8;
@@ -152,6 +179,17 @@ Bauen und Testen ohne Editor-GUI:
   -ExecCmds="Automation RunTests MolecularForge; Quit" -unattended -nopause -nullrhi -nosplash -stdout
 ```
 Vorher prüfen, ob `UnrealEditor.exe` läuft — der Testlauf sperrt sonst gegen die offene Sitzung.
+
+**So baut Fab** — und nur so fallen fehlende Includes auf, weil hier ohne Unity-Build
+übersetzt wird:
+```powershell
+& "C:\Program Files\Epic Games\UE_5.8\Engine\Build\BatchFiles\RunUAT.bat" BuildPlugin `
+  -Plugin="F:\Unreal Projects\ExamplePluginProject\Plugins\MolecularForge\MolecularForge.uplugin" `
+  -Package="C:\MFPkg" -TargetPlatforms=Win64
+```
+**Der Zielpfad muss kurz sein.** Beim ersten Versuch lag er im Scratchpad, und der Bau
+brach mit „action paths are longer than 260 characters" ab — das liest sich wie ein
+Übersetzungsfehler, ist aber keiner. `C:\MFPkg` funktioniert.
 
 ### Phase 5 — Editorarbeit (läuft)
 

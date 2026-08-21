@@ -1,4 +1,4 @@
-// Copyright Simulated Flow. All Rights Reserved.
+// Copyright 2026 Simulated Flow All Rights Reserved.
 
 #include "MolPdbParser.h"
 #include "MolecularStructure.h"
@@ -10,6 +10,7 @@
 #include "MolTextUtils.h"
 #include "Async/ParallelFor.h"
 #include "Misc/FileHelper.h"
+#include "Misc/Paths.h"
 
 namespace
 {

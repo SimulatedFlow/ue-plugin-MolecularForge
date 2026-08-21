@@ -1,4 +1,4 @@
-# Copyright Simulated Flow. All Rights Reserved.
+# Copyright 2026 Simulated Flow All Rights Reserved.
 #
 # Vertont den Kommentartext und legt ihn unter das Mesoskala-Video.
 #

@@ -1,4 +1,4 @@
-# Copyright Simulated Flow. All Rights Reserved.
+# Copyright 2026 Simulated Flow All Rights Reserved.
 #
 # Schiebt den Plugin-Inhalt in den Einpack-Ordner /MolecularForge/MolecularForge/.
 #

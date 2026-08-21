@@ -1,4 +1,4 @@
-// Copyright Simulated Flow. All Rights Reserved.
+// Copyright 2026 Simulated Flow All Rights Reserved.
 
 #include "MolStructureFetcher.h"
 #include "MolStructureCache.h"
@@ -10,6 +10,8 @@
 #include "HttpModule.h"
 #include "Interfaces/IHttpRequest.h"
 #include "Interfaces/IHttpResponse.h"
+// Basisklasse des Abrufkontexts weiter unten.
+#include "UObject/GCObject.h"
 #include "Serialization/JsonReader.h"
 #include "Serialization/JsonSerializer.h"
 #include "UObject/Package.h"

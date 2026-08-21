@@ -1,4 +1,4 @@
-# Copyright Simulated Flow. All Rights Reserved.
+# Copyright 2026 Simulated Flow All Rights Reserved.
 #
 # Gemeinsame Bausteine der Beispiel-Level.
 #
@@ -11,7 +11,7 @@
 #
 #     import os, sys, unreal
 #     sys.path.insert(0, os.path.join(unreal.Paths.project_dir(),
-#                                     "Plugins", "MolecularForge", "Tools"))
+#                                     "Plugins", "MolecularForge", "Content", "Python"))
 #     import mf_szene
 
 import unreal

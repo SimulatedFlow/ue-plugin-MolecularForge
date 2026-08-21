@@ -1,4 +1,4 @@
-# Copyright Simulated Flow. All Rights Reserved.
+# Copyright 2026 Simulated Flow All Rights Reserved.
 #
 # Packt das Plugin fuer Fab und prueft vorher, ob es den Anforderungen genuegt.
 #
@@ -62,7 +62,10 @@ def soll_mit(relativ):
         return False
     if len(teile) == 1 and teile[0] in VERBOTENE_DATEIEN:
         return False
-    if teile[0] == "Tools" and (len(teile) < 2 or teile[1] not in TOOLS_MITLIEFERN):
+    # Tools/ geht gar nicht mehr mit: die ausgelieferten Skripte liegen seit der
+    # Fab-Rueckmeldung unter Content/Python/, wie es die Pruefliste verlangt. Was in
+    # Tools/ verbleibt, sind Bau- und Diagnosewerkzeuge fuer uns.
+    if teile[0] == "Tools":
         return False
     if relativ.replace("\\", "/") in VERBOTENE_ASSETS:
         return False
@@ -85,6 +88,7 @@ def sammle():
 def pruefe(dateien):
     """Gibt die Liste der Beanstandungen zurueck. Leer heisst: packbar."""
     fehler = []
+    daten = None
     satz = set(d.replace("\\", "/") for d in dateien)
 
     if "Resources/Icon128.png" not in satz:
@@ -111,9 +115,13 @@ def pruefe(dateien):
                 if not daten.get(pflicht):
                     fehler.append("%s: Feld '%s' fehlt oder ist leer." % (uplugin, pflicht))
 
-    # Aller Inhalt muss im Einpackordner liegen.
+    # Aller Inhalt muss im Einpackordner liegen — ausser Python, das Fab ausdruecklich
+    # unter Content/Python/ erwartet (eigener Code) bzw. Content/Python/Lib/site-packages/
+    # (fremder Code, gibt es hier nicht).
     for d in satz:
-        if d.startswith("Content/") and not d.startswith("Content/%s/" % NAME):
+        if (d.startswith("Content/")
+                and not d.startswith("Content/%s/" % NAME)
+                and not d.startswith("Content/Python/")):
             fehler.append("Inhalt ausserhalb des Einpackordners: " + d)
 
     for d in satz:
@@ -123,6 +131,48 @@ def pruefe(dateien):
 
     if not any(d.startswith("Source/") for d in satz):
         fehler.append("Kein Quelltext im Paket — ein Code-Plugin ohne Source ist unbrauchbar.")
+
+    # --- Die Punkte, an denen die Fab-Pruefung vom 20.08.2026 gescheitert ist ---
+
+    # 1) Jedes Modul braucht eine Plattformliste.
+    if daten:
+        for m in daten.get("Modules", []):
+            if not (m.get("PlatformAllowList") or m.get("PlatformDenyList")):
+                fehler.append("Modul '%s': weder PlatformAllowList noch PlatformDenyList."
+                              % m.get("Name", "?"))
+
+    # 2) Jede Quelldatei braucht eine Copyright-Zeile MIT Jahr. "Copyright Simulated Flow."
+    #    ohne Jahreszahl wurde abgelehnt.
+    import re as _re
+    muster = _re.compile(r"^\s*(//|#)\s*Copyright\b.*\b(19|20)\d{2}\b")
+    for d in sorted(satz):
+        if not d.endswith((".h", ".cpp", ".cs", ".py")):
+            continue
+        try:
+            with open(os.path.join(PLUGIN, d), "r", encoding="utf-8") as f:
+                erste = f.readline()
+        except OSError as e:
+            fehler.append("%s nicht lesbar: %s" % (d, e))
+            continue
+        if not muster.match(erste):
+            fehler.append("Copyright-Zeile mit Jahr fehlt in: " + d)
+
+    # 3) Alles ausserhalb der erwarteten Struktur muss in FilterPlugin.ini stehen —
+    #    jede einzelne Datei, nicht nur die wichtigen.
+    erwartet = {"Config", "Content", "Resources", "Source"}
+    filter_pfad = os.path.join(PLUGIN, "Config", "FilterPlugin.ini")
+    gefiltert = ""
+    if os.path.isfile(filter_pfad):
+        with open(filter_pfad, "r", encoding="utf-8") as f:
+            gefiltert = f.read()
+
+    for d in sorted(satz):
+        teile = d.split("/")
+        if teile[0] in erwartet or d == NAME + ".uplugin":
+            continue
+        eintrag = "/" + teile[0]
+        if eintrag not in gefiltert:
+            fehler.append("Nicht in FilterPlugin.ini aufgefuehrt: " + d)
 
     return fehler
 

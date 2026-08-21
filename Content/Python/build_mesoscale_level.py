@@ -1,4 +1,4 @@
-# Copyright Simulated Flow. All Rights Reserved.
+# Copyright 2026 Simulated Flow All Rights Reserved.
 #
 # Baut die Demo der mesoskopischen Ebene: eine Molekuelpopulation, die diffundiert und
 # aneinander andockt.
@@ -17,7 +17,7 @@ import sys
 import unreal
 
 sys.path.insert(0, os.path.join(unreal.Paths.project_dir(),
-                                "Plugins", "MolecularForge", "Tools"))
+                                "Plugins", "MolecularForge", "Content", "Python"))
 import mf_szene
 
 LOG = unreal.log

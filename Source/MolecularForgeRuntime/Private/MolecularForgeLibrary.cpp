@@ -1,10 +1,14 @@
-// Copyright Simulated Flow. All Rights Reserved.
+// Copyright 2026 Simulated Flow All Rights Reserved.
 
 #include "MolecularForgeLibrary.h"
 #include "MolecularStructure.h"
 #include "MolStructureIO.h"
 #include "MolSelection.h"
 #include "MolMeasurement.h"
+// GetTransientPackage() liefert UPackage*. Ohne diese Kopfdatei ist UPackage nur
+// vorwaertsdeklariert, und der bedingte Ausdruck darunter findet keinen gemeinsamen
+// Typ mit UObject* — der Fehler liest sich dann irrefuehrend als Konvertierungsproblem.
+#include "UObject/Package.h"
 
 namespace
 {
