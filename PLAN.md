@@ -37,6 +37,19 @@ eingereicht** — das gehört Silvan.
 `Tools/build_fab_package.py` prüft die Punkte 2 bis 5 jetzt **vor** dem Packen und
 verweigert sonst den Dienst. Punkt 1 fängt nur ein echter Plugin-Bau ab.
 
+**Nachgewiesen:** `RunUAT BuildPlugin` läuft durch — BUILD SUCCESSFUL, alle 59 Dateien
+einzeln übersetzt. Das korrigierte Archiv liegt auf Drive **als neue Version derselben
+Datei** (Kennung `17FyrqiKLDfZJasHKpfFTlLQU1QppufE1` unverändert, alter Stand als
+„Version 1" erhalten). Der Fab-Eintrag zeigt damit ohne Änderung auf den korrigierten
+Stand. **Eine neue Datei hochzuladen wäre falsch gewesen** — der Eintrag hätte weiter auf
+das alte Archiv gezeigt.
+
+**Noch offen:** ein frischer Editor-Bau samt Testlauf. Silvan hatte den Editor offen
+(Live Coding sperrt den Bau), der letzte grüne Lauf mit 53/53 stammt daher vom Stand vor
+den Include-Ergänzungen. Inhaltlich geändert wurde nichts außer Includes und
+Copyright-Zeilen, und der vollständige Neuübersetzungslauf ist durch — trotzdem gehört
+der Testlauf nachgeholt, sobald der Editor zu ist.
+
 *Letzte Aktualisierung: 2026-08-19.*
 
 **Alle fünf Phasen sind abgeschlossen.** Alle fünf Module bauen sauber gegen UE 5.8;
