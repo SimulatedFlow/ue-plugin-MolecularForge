@@ -44,11 +44,16 @@ Datei** (Kennung `17FyrqiKLDfZJasHKpfFTlLQU1QppufE1` unverändert, alter Stand a
 Stand. **Eine neue Datei hochzuladen wäre falsch gewesen** — der Eintrag hätte weiter auf
 das alte Archiv gezeigt.
 
-**Noch offen:** ein frischer Editor-Bau samt Testlauf. Silvan hatte den Editor offen
-(Live Coding sperrt den Bau), der letzte grüne Lauf mit 53/53 stammt daher vom Stand vor
-den Include-Ergänzungen. Inhaltlich geändert wurde nichts außer Includes und
-Copyright-Zeilen, und der vollständige Neuübersetzungslauf ist durch — trotzdem gehört
-der Testlauf nachgeholt, sobald der Editor zu ist.
+**Nachgeholt am 23.08.2026, 00:30 Uhr: Bau und Tests grün am korrigierten Stand.**
+`Result: Succeeded`, **53 von 53 Tests bestanden, keiner rot**, Rückgabewert 0. Damit ist
+belegt, dass die Include-Ergänzungen nichts kaputt gemacht haben — die vorherige grüne
+Meldung vom 21.08. stammte noch von Binärdateien aus der Zeit davor und zählte nicht.
+
+Gegengeprüft wurde nicht nur die Testmeldung, sondern auch, ob überhaupt der neue Stand
+lief: die Bibliotheken tragen den 21.08. um 11:57–12:03, die letzte Quelländerung den
+21.08. um 09:10. Der Bau in dieser Nacht übersetzte folgerichtig nur fremde Plugins neu,
+MolecularForge war bereits aktuell. Ohne diesen Abgleich hätte ein „Result: Succeeded"
+auch bedeuten können, dass gar nichts übersetzt wurde.
 
 *Letzte Aktualisierung: 2026-08-19.*
 
