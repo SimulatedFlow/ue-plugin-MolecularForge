@@ -3,7 +3,7 @@
 **Was das ist:** Ein Struktur-Loader und Renderer für Proteine und Moleküle in Unreal Engine 5.8.
 Kern in einem Satz: *PDB-/mmCIF-Datei oder UniProt-ID rein → performantes, animierbares, Niagara-fähiges Molekül in der Szene raus.*
 
-**Rechtsträger:** Freelancer Simulated Flow (Plugins/Bücher-Schiene), nicht die Simulated Flow UG.
+**Rechtsträger:** Freelancer Silvan Teufel (Plugins/Bücher-Schiene), nicht die Silvan Teufel.
 **Ziel-Engine:** UE 5.8. **Zielplattform Verkauf:** Fab, sekundär Gumroad/Itch.
 
 ---
@@ -24,8 +24,8 @@ eingereicht** — das gehört Silvan.
    Editor-Bau.
 2. **Jedes Modul braucht `PlatformAllowList`.** Jetzt `["Win64"]` in allen fünf.
 3. **Copyright-Zeile ohne Jahr wurde abgelehnt.** War
-   `// Copyright Simulated Flow. All Rights Reserved.`, ist jetzt
-   `// Copyright 2026 Simulated Flow All Rights Reserved.` — dieselbe Form wie im
+   `// Copyright Silvan Teufel. All Rights Reserved.`, ist jetzt
+   `// Copyright 2026 Silvan Teufel All Rights Reserved.` — dieselbe Form wie im
    angenommenen ZoneManager, in allen 112 Quelldateien.
 4. **`FilterPlugin.ini` muss *jede* Datei außerhalb der erwarteten Struktur aufzählen.**
    `DESCRIPTION.md` fehlte. Erwartet sind nur `Config`, `Content`, `Resources`, `Source`
@@ -423,8 +423,8 @@ echte Demo-Struktur mitgeliefert wird** (kommt für Fab ohnehin): dann gegen ein
 mit bekanntem Faltblattanteil prüfen.
 
 **Frage an Silvan — Copyright-Zeile.** Die Header stehen inzwischen auf
-`Copyright Simulated Flow`. Nach der bisherigen Aufteilung gehören Plugins zum Freelancer
-Simulated Flow und nur Merch/Hardware zur UG. Ich habe nichts zurückgedreht. Wenn die
+`Copyright Silvan Teufel`. Nach der bisherigen Aufteilung gehören Plugins zum Freelancer
+Silvan Teufel und nur Merch/Hardware zur UG. Ich habe nichts zurückgedreht. Wenn die
 Aufteilung weiter gilt, muss das vor dem Fab-Listing einheitlich sein — die Zeile steht
 in jeder Datei und im `.uplugin` unter `CreatedBy`.
 

@@ -1,4 +1,4 @@
-# Copyright 2026 Simulated Flow All Rights Reserved.
+# Copyright 2026 Silvan Teufel All Rights Reserved.
 #
 # Baut die Demo der mesoskopischen Ebene: eine Molekuelpopulation, die diffundiert und
 # aneinander andockt.

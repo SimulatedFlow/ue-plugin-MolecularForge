@@ -1,4 +1,4 @@
-# Copyright 2026 Simulated Flow All Rights Reserved.
+# Copyright 2026 Silvan Teufel All Rights Reserved.
 #
 # Packt das Plugin fuer Fab und prueft vorher, ob es den Anforderungen genuegt.
 #
@@ -141,7 +141,7 @@ def pruefe(dateien):
                 fehler.append("Modul '%s': weder PlatformAllowList noch PlatformDenyList."
                               % m.get("Name", "?"))
 
-    # 2) Jede Quelldatei braucht eine Copyright-Zeile MIT Jahr. "Copyright Simulated Flow."
+    # 2) Jede Quelldatei braucht eine Copyright-Zeile MIT Jahr. "Copyright Silvan Teufel."
     #    ohne Jahreszahl wurde abgelehnt.
     import re as _re
     muster = _re.compile(r"^\s*(//|#)\s*Copyright\b.*\b(19|20)\d{2}\b")

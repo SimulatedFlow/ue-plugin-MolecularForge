@@ -1,4 +1,4 @@
-# Copyright 2026 Simulated Flow All Rights Reserved.
+# Copyright 2026 Silvan Teufel All Rights Reserved.
 #
 # Schaut nach, was im Schaulevel tatsaechlich steht — Material, Instanzzahl, Sichtbarkeit.
 # Gedacht fuer den Fall, dass ein Bild anders aussieht als erwartet und die Frage lautet:
