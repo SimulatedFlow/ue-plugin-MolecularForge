@@ -8,7 +8,7 @@
 	"Category": "Code Plugins",
 	"CreatedBy": "Silvan Teufel",
 	"CreatedByURL": "https://silvan.teufel-engineering.com",
-	"DocsURL": "https://wiki.teufel-engineering.com/en/MolecularForge/documentation",
+	"DocsURL": "https://github.com/SimulatedFlow/ue-plugin-MolecularForge",
 	"MarketplaceURL": "",
 	"SupportURL": "mailto:teufelsilvan@gmail.com",
 	"CanContainContent": true,
