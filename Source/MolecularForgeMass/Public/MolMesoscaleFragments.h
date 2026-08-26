@@ -4,8 +4,12 @@
 
 #include "CoreMinimal.h"
 #include "MassEntityTypes.h"
-// FMassEntityHandle liegt in 5.8 hier und nicht in MassEntityTypes.h.
+// FMassEntityHandle liegt seit dem Mass-Umbau hier. Wo die Engine MassCore noch nicht
+// abgespalten hat, gibt es die Kopfdatei nicht und MassEntityTypes.h oben bringt den Typ
+// selbst mit. Siehe MolecularForgeMass.Build.cs.
+#if __has_include("Mass/EntityHandle.h")
 #include "Mass/EntityHandle.h"
+#endif
 #include "MolMesoscaleMath.h"
 #include "MolMesoscaleFragments.generated.h"
 

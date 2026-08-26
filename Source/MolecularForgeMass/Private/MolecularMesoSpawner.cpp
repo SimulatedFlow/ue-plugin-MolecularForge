@@ -3,7 +3,12 @@
 #include "MolecularMesoSpawner.h"
 #include "MolecularForgeTypes.h"
 
+// Siehe MolecularForgeMass.Build.cs: MassCore ist nicht in jedem 5.8-Stand abgespalten.
+#if __has_include("Mass/EntityFragments.h")
 #include "Mass/EntityFragments.h"
+#else
+#include "MassCommonFragments.h"
+#endif
 #include "MassEntityManager.h"
 #include "MassEntitySubsystem.h"
 #include "MassMovementFragments.h"
