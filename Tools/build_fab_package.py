@@ -186,12 +186,27 @@ def packe(dateien):
     # Google Drive, und der Fab-Eintrag verweist auf jene Datei. Wird hier umbenannt,
     # zeigt der Verkaufseintrag beim naechsten Austausch auf eine andere Datei als die,
     # die gebaut wurde.
+    # Der Store-Block richtet sich an Besucher des GitHub-Spiegels ("source-available,
+    # jetzt kaufen", Newsletter). Im bezahlten Paket ist das Werbung an jemanden, der schon
+    # gekauft hat — und der Satz ueber das angeblich fehlende Fab-Listing ist dort falsch.
+    import re as _re2
+    store_block = _re2.compile(
+        r"(?s)\s*<!--\s*SF-STORE-BLOCK:BEGIN\s*-->.*?<!--\s*SF-STORE-BLOCK:END\s*-->\s*")
+
     archiv = os.path.join(ZIEL_ORDNER, "%s.zip" % NAME)
     with zipfile.ZipFile(archiv, "w", zipfile.ZIP_DEFLATED, compresslevel=9) as z:
         for relativ in dateien:
             # Im Archiv liegt alles unter einem Ordner mit dem Plugin-Namen, sonst
             # entpackt der Kaeufer den Inhalt in sein Plugins-Verzeichnis statt daneben.
-            z.write(os.path.join(PLUGIN, relativ), os.path.join(NAME, relativ))
+            quelle = os.path.join(PLUGIN, relativ)
+            if relativ.endswith(".md"):
+                with open(quelle, "r", encoding="utf-8") as f:
+                    text = f.read()
+                sauber = store_block.sub("\n", text)
+                if sauber != text:
+                    z.writestr(os.path.join(NAME, relativ), sauber)
+                    continue
+            z.write(quelle, os.path.join(NAME, relativ))
 
     # Der Listing-Text, der Attributionstext und der Wiki-Entwurf wandern daneben,
     # nicht ins Archiv.
