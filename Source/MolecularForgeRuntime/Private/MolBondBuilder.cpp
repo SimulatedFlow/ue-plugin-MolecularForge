@@ -20,7 +20,7 @@ namespace
 	 */
 	constexpr int64 GMaxGridCells = 8 * 1024 * 1024;
 
-	constexpr int32 GParallelThreshold = 4096;
+	constexpr int32 GBondParallelThreshold = 4096;
 }
 
 namespace MolecularForge
@@ -110,7 +110,7 @@ namespace MolecularForge
 			const int32 Y = FMath::Clamp(FMath::FloorToInt(Local.Y), 0, GridDim.Y - 1);
 			const int32 Z = FMath::Clamp(FMath::FloorToInt(Local.Z), 0, GridDim.Z - 1);
 			AtomCell[i] = (Z * GridDim.Y + Y) * GridDim.X + X;
-		}, NumAtoms < GParallelThreshold ? EParallelForFlags::ForceSingleThread : EParallelForFlags::None);
+		}, NumAtoms < GBondParallelThreshold ? EParallelForFlags::ForceSingleThread : EParallelForFlags::None);
 
 		// Counting Sort: zaehlen, Praefixsumme, einsortieren. Ergebnis ist ein
 		// zusammenhaengendes Array, in dem die Atome jeder Zelle nebeneinander liegen.
@@ -138,7 +138,7 @@ namespace MolecularForge
 
 		// ---- Paarungslauf ----
 
-		const int32 NumChunks = (NumAtoms >= GParallelThreshold)
+		const int32 NumChunks = (NumAtoms >= GBondParallelThreshold)
 			? FMath::Clamp(FTaskGraphInterface::Get().GetNumWorkerThreads(), 1, 64)
 			: 1;
 		const int32 ChunkSize = FMath::DivideAndRoundUp(NumAtoms, NumChunks);

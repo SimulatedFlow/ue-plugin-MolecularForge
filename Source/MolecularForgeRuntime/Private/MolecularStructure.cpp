@@ -60,7 +60,7 @@ namespace
 	}
 
 	/** Ab dieser Atomzahl lohnt der Thread-Overhead. Darunter ist die Schleife schneller allein. */
-	constexpr int32 GParallelThreshold = 8192;
+	constexpr int32 GStructureParallelThreshold = 8192;
 }
 
 namespace MolecularForge
@@ -275,7 +275,7 @@ void UMolecularStructure::FinalizeAfterLoad()
 			float MaxB = TNumericLimits<float>::Lowest();
 		};
 
-		const int32 NumChunks = (NumAtoms >= GParallelThreshold)
+		const int32 NumChunks = (NumAtoms >= GStructureParallelThreshold)
 			? FMath::Clamp(FTaskGraphInterface::Get().GetNumWorkerThreads(), 1, 64)
 			: 1;
 		const int32 ChunkSize = FMath::DivideAndRoundUp(NumAtoms, NumChunks);
@@ -398,7 +398,7 @@ void UMolecularStructure::CenterOnOrigin()
 	ParallelFor(NumAtoms, [this, Center](int32 Index)
 	{
 		AtomPositions[Index] -= Center;
-	}, NumAtoms < GParallelThreshold ? EParallelForFlags::ForceSingleThread : EParallelForFlags::None);
+	}, NumAtoms < GStructureParallelThreshold ? EParallelForFlags::ForceSingleThread : EParallelForFlags::None);
 
 	CachedBounds = CachedBounds.ShiftBy(-Center);
 }

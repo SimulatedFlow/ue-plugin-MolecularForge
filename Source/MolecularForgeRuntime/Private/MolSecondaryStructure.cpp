@@ -33,7 +33,7 @@ namespace
 	/** Hoechster C-N-Abstand, bei dem zwei Residuen noch als peptidverknuepft gelten. */
 	constexpr float GPeptideBondMax = 2.5f;
 
-	constexpr int32 GParallelThreshold = 256;
+	constexpr int32 GDsspParallelThreshold = 256;
 
 	/** Rueckgratdaten eines Residuums, aufbereitet fuer den Energielauf. */
 	struct FBackbone
@@ -340,7 +340,7 @@ namespace MolecularForge
 					}
 				}
 			}
-		}, Candidates.Num() < GParallelThreshold ? EParallelForFlags::ForceSingleThread : EParallelForFlags::None);
+		}, Candidates.Num() < GDsspParallelThreshold ? EParallelForFlags::ForceSingleThread : EParallelForFlags::None);
 
 		// ---- Muster auswerten ----
 		// Ab hier sequenziell und billig. HBond(Co, Nh) heisst: die C=O-Gruppe von Co

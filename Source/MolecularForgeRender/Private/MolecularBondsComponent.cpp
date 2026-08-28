@@ -12,7 +12,7 @@ namespace
 	constexpr float GEngineCylinderHeight = 100.f;
 
 	/** Custom-Data-Slots: 0..2 Farbe, 3 Radius in Angstroem. Gleiche Belegung wie bei den Atomen. */
-	constexpr int32 GNumCustomDataFloats = 4;
+	constexpr int32 GBondCustomDataFloats = 4;
 }
 
 UMolecularBondsComponent::UMolecularBondsComponent()
@@ -21,7 +21,7 @@ UMolecularBondsComponent::UMolecularBondsComponent()
 
 	SetCollisionEnabled(ECollisionEnabled::NoCollision);
 	SetGenerateOverlapEvents(false);
-	NumCustomDataFloats = GNumCustomDataFloats;
+	NumCustomDataFloats = GBondCustomDataFloats;
 
 	static ConstructorHelpers::FObjectFinder<UStaticMesh> CylinderMesh(TEXT("/Engine/BasicShapes/Cylinder.Cylinder"));
 	if (CylinderMesh.Succeeded())

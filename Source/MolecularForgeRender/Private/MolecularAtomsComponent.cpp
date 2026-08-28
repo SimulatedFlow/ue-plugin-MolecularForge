@@ -12,7 +12,7 @@ namespace
 	constexpr float GEngineSphereRadius = 50.f;
 
 	/** Custom-Data-Slots: 0..2 Farbe, 3 Radius in Unreal-Einheiten. */
-	constexpr int32 GNumCustomDataFloats = 4;
+	constexpr int32 GAtomCustomDataFloats = 4;
 }
 
 UMolecularAtomsComponent::UMolecularAtomsComponent()
@@ -23,7 +23,7 @@ UMolecularAtomsComponent::UMolecularAtomsComponent()
 	// hunderttausend Instanzen kostet beides mehr, als es einbringt.
 	SetCollisionEnabled(ECollisionEnabled::NoCollision);
 	SetGenerateOverlapEvents(false);
-	NumCustomDataFloats = GNumCustomDataFloats;
+	NumCustomDataFloats = GAtomCustomDataFloats;
 
 	static ConstructorHelpers::FObjectFinder<UStaticMesh> FoundSphere(
 		TEXT("/Engine/BasicShapes/Sphere.Sphere"));
